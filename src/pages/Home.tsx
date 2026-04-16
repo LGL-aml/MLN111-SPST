@@ -691,7 +691,7 @@ export default function Home() {
                     >
                       <span
                         className={`material-symbols-outlined text-2xl ${chapter.color === 'primary' ? 'text-primary'
-                            : chapter.color === 'secondary' ? 'text-secondary'
+                            : chapter.color === 'secondary' ? 'text-on-secondary-container'
                               : chapter.color === 'tertiary' ? 'text-tertiary'
                                 : 'text-error'
                           }`}
@@ -973,7 +973,6 @@ export default function Home() {
                     '⏱️ Thi giới hạn thời gian',
                     '📊 Phân tích kết quả chi tiết',
                     '💡 Giải thích đáp án',
-                    '🏆 Bảng xếp hạng toàn quốc',
                     '📚 Ngân hàng 500+ câu hỏi',
                     '🎯 Theo dõi tiến trình',
                     '🔄 Luyện tập không giới hạn',
