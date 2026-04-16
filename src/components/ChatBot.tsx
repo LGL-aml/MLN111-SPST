@@ -5,6 +5,7 @@ import { MessageSquare, X, Send, Bot, Loader2 } from "lucide-react";
 import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import lenninLogo from "../public/lennin2.0.png";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: number;
@@ -181,7 +182,57 @@ export default function ChatBot() {
                         : "bg-primary text-on-primary rounded-tr-sm shadow-md"
                     }`}
                   >
-                    {msg.text}
+                    {msg.isBot ? (
+                      <div className="markdown-body">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ children }) => (
+                              <h1 className="text-[15px] font-bold mb-2 mt-1 text-primary border-b border-outline-variant pb-1">{children}</h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-[14px] font-semibold mb-1.5 mt-2 text-on-surface">{children}</h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="text-[13px] font-semibold mb-1 mt-1.5 text-on-surface-variant">{children}</h3>
+                            ),
+                            p: ({ children }) => (
+                              <p className="mb-2 last:mb-0">{children}</p>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="mb-2 space-y-1 pl-1">{children}</ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="mb-2 space-y-1 pl-4 list-decimal">{children}</ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="flex gap-1.5 items-start">
+                                <span className="mt-1 shrink-0 text-primary text-[10px]">●</span>
+                                <span>{children}</span>
+                              </li>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-semibold text-on-surface">{children}</strong>
+                            ),
+                            em: ({ children }) => (
+                              <em className="italic text-on-surface-variant">{children}</em>
+                            ),
+                            code: ({ children }) => (
+                              <code className="bg-surface-variant/60 rounded px-1 py-0.5 text-[12px] font-mono">{children}</code>
+                            ),
+                            blockquote: ({ children }) => (
+                              <blockquote className="border-l-2 border-primary pl-3 my-2 text-on-surface-variant italic">{children}</blockquote>
+                            ),
+                            hr: () => (
+                              <hr className="border-outline-variant my-2" />
+                            ),
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      msg.text
+                    )}
                   </motion.div>
                 </div>
               ))}

@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import eosImg from '../public/eos.png';
 
 /* ─── Floating Particle Component ─── */
@@ -57,7 +58,7 @@ const fadeInUp = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.7 },
   },
 };
 
@@ -66,7 +67,7 @@ const fadeInLeft = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.8 },
   },
 };
 
@@ -75,7 +76,7 @@ const fadeInRight = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.8 },
   },
 };
 
@@ -84,7 +85,7 @@ const scaleIn = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.6 },
   },
 };
 
@@ -103,7 +104,6 @@ function RevealText({ text, className, highlightWords = [] }: { text: string; cl
           transition={{
             duration: 0.5,
             delay: i * 0.04,
-            ease: [0.25, 0.46, 0.45, 0.94],
           }}
         >
           {word}
@@ -170,6 +170,8 @@ export const conceptData: Record<string, { title: string; explanation: string; r
 /*                   HOME PAGE                    */
 /* ────────────────────────────────────────────── */
 export default function Home() {
+  const navigate = useNavigate();
+
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -302,6 +304,7 @@ export default function Home() {
             <motion.div className="flex flex-wrap gap-4" variants={fadeInUp}>
               <motion.button
                 className="px-8 py-4 bg-primary text-on-primary font-bold tracking-wide relative overflow-hidden group"
+                onClick={() => navigate('/theory')}
                 whileHover={{ scale: 1.05, boxShadow: '0 10px 40px rgba(45,90,39,0.3)' }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -316,6 +319,7 @@ export default function Home() {
               </motion.button>
               <motion.button
                 className="px-8 py-4 border border-outline-variant text-on-surface font-bold tracking-wide backdrop-blur-md relative overflow-hidden"
+                onClick={() => navigate('/game')}
                 whileHover={{ scale: 1.05, backgroundColor: 'var(--color-surface-bright)' }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -535,6 +539,7 @@ export default function Home() {
 
                   <motion.button
                     className="w-full mt-6 py-4 bg-primary text-on-primary font-bold uppercase tracking-widest rounded-xl hover:shadow-lg transition-shadow active:scale-95"
+                    onClick={() => navigate('/theory')}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -778,6 +783,7 @@ export default function Home() {
           >
             <motion.button
               className="px-10 py-4 bg-primary text-on-primary font-bold tracking-wide text-lg relative overflow-hidden group"
+              onClick={() => navigate('/theory')}
               whileHover={{ scale: 1.05, boxShadow: '0 12px 40px rgba(45,90,39,0.25)' }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -890,6 +896,7 @@ export default function Home() {
               <motion.div className="flex flex-wrap gap-4" variants={fadeInUp}>
                 <motion.button
                   className="px-8 py-4 bg-primary text-on-primary font-bold tracking-wide text-base relative overflow-hidden group"
+                  onClick={() => navigate('/quiz')}
                   whileHover={{ scale: 1.05, boxShadow: '0 12px 40px rgba(45,90,39,0.3)' }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -907,6 +914,7 @@ export default function Home() {
                 </motion.button>
                 <motion.button
                   className="px-8 py-4 border border-outline-variant text-on-surface font-bold tracking-wide backdrop-blur-md"
+                  onClick={() => navigate('/quiz')}
                   whileHover={{ scale: 1.05, backgroundColor: 'var(--color-surface-bright)' }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}

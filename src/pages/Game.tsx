@@ -383,7 +383,7 @@ function LobbyView({
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, type: "spring", bounce: 0.3 },
+      transition: { duration: 0.6, bounce: 0.3 },
     },
   };
   const itemFadeLeft = {
@@ -391,7 +391,7 @@ function LobbyView({
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.7, type: "spring", bounce: 0.2 },
+      transition: { duration: 0.7, bounce: 0.2 },
     },
   };
   const itemFadeRight = {
@@ -399,7 +399,7 @@ function LobbyView({
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.7, type: "spring", bounce: 0.2 },
+      transition: { duration: 0.7, bounce: 0.2 },
     },
   };
 

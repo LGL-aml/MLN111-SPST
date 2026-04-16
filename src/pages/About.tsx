@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, type: 'spring', bounce: 0.2 } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, bounce: 0.2 } }
 };
 
 const staggerContainer = {

@@ -18,7 +18,7 @@ const fadeInUp = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.7 },
   },
 };
 
@@ -28,7 +28,7 @@ const scaleIn = {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.6 },
   },
 };
 
@@ -285,7 +285,7 @@ export default function Quiz() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 0.8 }}
           >
             {/* Forest background image */}
             <div className="relative h-64 md:h-80 overflow-hidden">

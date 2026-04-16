@@ -5,18 +5,24 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import ScrollToTop from './components/ScrollToTop';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Game from './pages/Game';
 import Quiz from './pages/Quiz';
 import Theory from './pages/Theory';
 import About from './pages/About';
+import Exam from './pages/Exam';
 
 export default function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
+          {/* Full-screen exam – outside Layout so no navbar/footer */}
+          <Route path="/quiz/exam" element={<Exam />} />
+
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="game" element={<Game />} />
