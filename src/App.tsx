@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Game from './pages/Game';
 import Leaderboard from './pages/Leaderboard';
 import Quiz from './pages/Quiz';
+import Theory from './pages/Theory';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="game" element={<Game />} />
             <Route path="quiz" element={<Quiz />} />
+            <Route path="theory" element={<Theory />} />
             <Route path="leaderboard" element={<Leaderboard />} />
           </Route>
         </Routes>

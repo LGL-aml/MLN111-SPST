@@ -166,6 +166,7 @@ html.dark {
 /* Global rounded corners for softer, modern buttons */
 button {
   border-radius: 12px;
+  cursor: pointer;
 }
 
 input {
