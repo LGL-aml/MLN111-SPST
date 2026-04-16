@@ -8,7 +8,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Game from './pages/Game';
-import Leaderboard from './pages/Leaderboard';
 import Quiz from './pages/Quiz';
 import Theory from './pages/Theory';
 import About from './pages/About';
@@ -23,7 +22,6 @@ export default function App() {
             <Route path="game" element={<Game />} />
             <Route path="quiz" element={<Quiz />} />
             <Route path="theory" element={<Theory />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="about" element={<About />} />
           </Route>
         </Routes>

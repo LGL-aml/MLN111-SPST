@@ -8,13 +8,27 @@
  * @module
  */
 
+import type * as chat from "../chat.js";
+import type * as game from "../game.js";
+import type * as gameData from "../gameData.js";
+import type * as knowledgeBase from "../knowledgeBase.js";
+import type * as rooms from "../rooms.js";
+import type * as seed from "../seed.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  chat: typeof chat;
+  game: typeof game;
+  gameData: typeof gameData;
+  knowledgeBase: typeof knowledgeBase;
+  rooms: typeof rooms;
+  seed: typeof seed;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
