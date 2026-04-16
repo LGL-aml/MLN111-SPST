@@ -136,7 +136,7 @@ export default function Theory() {
         </motion.div>
 
         {/* Section 1: Khái niệm con người */}
-        <section id="s1" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s1" className="scroll-mt-28 space-y-6">
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm hover:border-primary/30 transition-colors">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-600 flex items-center justify-center flex-shrink-0">
@@ -193,10 +193,10 @@ export default function Theory() {
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section 2: Tha hóa là gì? */}
-        <section id="s2" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s2" className="scroll-mt-28 space-y-6">
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:border-red-500/30 transition-colors">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -240,10 +240,10 @@ export default function Theory() {
               Trong xã hội tư bản, tha hóa không chỉ ảnh hưởng đến công nhân mà còn đến cả nhà tư bản, mặc dù ở các mức độ và trạng thái khác nhau.
             </Accordion>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section 3: Biểu hiện tha hóa */}
-        <section id="s3" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s3" className="scroll-mt-28 space-y-6">
           <h2 className="text-3xl font-headline font-bold text-on-surface mb-6 px-1 border-l-4 border-amber-500 pl-3">3 Biểu hiện của tha hóa</h2>
           
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:-translate-y-1 transition-transform duration-300">
@@ -328,10 +328,10 @@ export default function Theory() {
               </table>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section 4: So sánh */}
-        <section id="s4" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s4" className="scroll-mt-28 space-y-6">
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm overflow-hidden hover:border-blue-500/30 transition-colors">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
@@ -369,10 +369,10 @@ export default function Theory() {
               </table>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section 5: Giải phóng */}
-        <section id="s5" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s5" className="scroll-mt-28 space-y-6">
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:border-primary/30 transition-colors">
             <div className="flex items-start gap-4 mb-4">
               <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
@@ -418,10 +418,10 @@ export default function Theory() {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section 6: Thực tiễn */}
-        <section id="s6" className="scroll-mt-28 space-y-6">
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s6" className="scroll-mt-28 space-y-6">
           <h2 className="text-3xl font-headline font-bold text-on-surface flex items-center gap-3 border-b border-outline-variant pb-3">
             <Globe className="w-6 h-6 text-primary" /> Thực tiễn hiện đại
           </h2>
@@ -478,7 +478,7 @@ export default function Theory() {
               Dù hình thái kinh tế hiện đại đã thay đổi với nhiều yếu tố phức tạp, các nguyên lý của Mác về chống tha hóa và giải phóng con người vẫn còn nguyên giá trị nền tảng. Xã hội đang dần nhận thức rõ hơn về việc trao quyền làm chủ người lao động, không để con người trở thành "công cụ" của AI hay thuật toán, qua đó từng bước thực hiện quá trình tự do phát triển toàn diện của nhân loại.
             </p>
           </div>
-        </section>
+        </motion.section>
       </main>
     </div>
   );

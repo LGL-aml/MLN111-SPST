@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import eosImg from '../public/eos.png';
 
@@ -113,6 +113,59 @@ function RevealText({ text, className, highlightWords = [] }: { text: string; cl
   );
 }
 
+export const conceptData: Record<string, { title: string; explanation: string; realWorldExample: string; keyTakeaways: string[]; icon: string; color: string; colorValue: string; }> = {
+  "lao-dong": {
+    icon: "factory", color: "text-primary", colorValue: "var(--color-primary)",
+    title: "Lao động bị tha hóa",
+    explanation: "Trong xã hội tư bản, lao động mang tính cưỡng bức để bảo đảm sinh tồn chứ không còn là hoạt động tự do sáng tạo. Con người bị máy móc hóa và đánh mất chính bản chất của mình ngay trong quá trình lao động.",
+    realWorldExample: "Nhiều công nhân tại các khu công nghiệp phải tăng ca liên tục 12-16 tiếng/ngày. Họ lặp đi lặp lại một thao tác như cái máy, dẫn đến kiệt quệ thể chất và hoàn toàn không có động lực sáng tạo.",
+    keyTakeaways: [
+      "Lao động mang tính cưỡng bức, thụ động",
+      "Con người mất năng lực sáng tạo tự chủ"
+    ]
+  },
+  "so-huu": {
+    icon: "account_balance", color: "text-tertiary", colorValue: "var(--color-tertiary)",
+    title: "Sở hữu tư nhân",
+    explanation: "Đây là nguyên nhân sâu xa (cội nguồn) của sự tha hóa. Sản phẩm do người lao động tạo ra bị chiếm đoạt tư nhân, biến thành 'vật chất chết' – một lực lượng đối lập, trói buộc và thống trị lại chính người tạo ra nó.",
+    realWorldExample: "Công nhân lắp ráp thiết bị công nghệ cao tạo ra những sản phẩm đắt tiền nhưng bản thân họ không được hưởng thành quả, lương thấp và cuộc sống bấp bênh, trong khi lợi nhuận khổng lồ thuộc về giới chủ.",
+    keyTakeaways: [
+      "Tư hữu là cội nguồn hiện tượng tha hóa",
+      "Sản phẩm thành thế lực thống trị người lao động"
+    ]
+  },
+  "quan-he": {
+    icon: "group_off", color: "text-error", colorValue: "var(--color-error)",
+    title: "Con người vs Con người",
+    explanation: "Trong xã hội tha hóa, quan hệ giữa người với người bị 'hoán đổi' thành quan hệ giữa người và vật (tiền bạc, hàng hóa). Sự cạnh tranh thay thế cho sự hợp tác, dẫn đến tình trạng cô lập xã hội.",
+    realWorldExample: "Môi trường văn phòng hiện đại nơi nhân viên chịu áp lực KPI khốc liệt. Họ coi đồng nghiệp là đối thủ cạnh tranh, dẫn đến hội chứng 'burnout', sự vô cảm và nới lỏng các mối quan hệ cộng đồng.",
+    keyTakeaways: [
+      "Quan hệ vật chất thay thế quan hệ nhân văn",
+      "Gia tăng cô lập, vô cảm và suy thoái đạo đức"
+    ]
+  },
+  "giai-phong": {
+    icon: "eco", color: "text-secondary", colorValue: "var(--color-secondary)",
+    title: "Giải phóng con người",
+    explanation: "Là quá trình xóa bỏ chế độ tư hữu và mọi hình thức áp bức, chuyển nhân loại từ 'vương quốc của tất yếu' sang 'vương quốc của tự do'. Ở đó, sự phát triển tự do của mỗi người là điều kiện cho sự phát triển của mọi người.",
+    realWorldExample: "Sự phát triển của các mô hình Hợp tác xã chia sẻ lợi ích, hoặc các chính sách tăng phúc lợi, giảm giờ làm giúp người lao động có không gian để học tập, sáng tạo.",
+    keyTakeaways: [
+      "Xóa bỏ tư hữu, thiết lập sở hữu xã hội",
+      "Phát triển toàn diện và tự do cho mọi cá nhân"
+    ]
+  },
+  "center": {
+    icon: "hub", color: "text-primary", colorValue: "var(--color-primary)",
+    title: "Bản chất của Tha hóa",
+    explanation: "Sự phân ly giữa người lao động và sản phẩm lao động, quá trình lao động, bản thân họ và cả xã hội xung quanh, biến con người thành công cụ vô tri.",
+    realWorldExample: "Cảm giác trống rỗng trong xã hội hiện đại, khi con người sống để làm việc kiếm tiền chi trả hóa đơn mà thiếu đi ý nghĩa thực sự của cuộc sống con người.",
+    keyTakeaways: [
+      "Phân ly giữa người lao động và sản phẩm",
+      "Con người đánh mất bản chất tự do ban đầu"
+    ]
+  }
+};
+
 /* ────────────────────────────────────────────── */
 /*                   HOME PAGE                    */
 /* ────────────────────────────────────────────── */
@@ -144,7 +197,8 @@ export default function Home() {
   }, []);
 
   // Mind map section hover state
-  const [activeNode, setActiveNode] = useState<string | null>(null);
+  const [activeNode, setActiveNode] = useState<string>("giai-phong");
+  const nodeData = conceptData[activeNode] || conceptData["giai-phong"];
 
   return (
     <main className="pt-16 overflow-hidden">
@@ -361,8 +415,7 @@ export default function Home() {
                   transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.5 }}
                   whileHover={{ scale: 1.08, boxShadow: '0 0 60px rgba(45,90,39,0.25)' }}
                   whileTap={{ scale: 0.95 }}
-                  onHoverStart={() => setActiveNode('center')}
-                  onHoverEnd={() => setActiveNode(null)}
+                  onClick={() => setActiveNode('center')}
                 >
                   <motion.span
                     className="material-symbols-outlined text-primary text-4xl mb-2"
@@ -377,22 +430,21 @@ export default function Home() {
 
               {/* Branch Nodes */}
               {[
-                { pos: 'top-[20%] left-[20%]', icon: 'factory', label: 'Lao động bị tha hóa', hoverBg: 'hover:bg-primary-container', iconColor: 'text-primary', nodeKey: 'labor', delay: 0.7 },
-                { pos: 'top-[20%] right-[20%]', icon: 'account_balance', label: 'Sở hữu tư nhân', hoverBg: 'hover:bg-tertiary', iconColor: 'text-tertiary', nodeKey: 'private', delay: 0.9 },
-                { pos: 'bottom-[20%] left-[20%]', icon: 'group_off', label: 'Con người vs Con người', hoverBg: 'hover:bg-error', iconColor: 'text-error', nodeKey: 'conflict', delay: 1.1 },
-                { pos: 'bottom-[20%] right-[20%]', icon: 'eco', label: 'Giải phóng con người', hoverBg: 'hover:bg-secondary-container', iconColor: 'text-secondary', nodeKey: 'liberation', delay: 1.3, isFeatured: true },
+                { pos: 'top-[20%] left-[20%]', icon: 'factory', label: 'Lao động bị tha hóa', hoverBg: 'hover:bg-primary-container', iconColor: 'text-primary', nodeKey: 'lao-dong', delay: 0.7 },
+                { pos: 'top-[20%] right-[20%]', icon: 'account_balance', label: 'Sở hữu tư nhân', hoverBg: 'hover:bg-tertiary', iconColor: 'text-tertiary', nodeKey: 'so-huu', delay: 0.9 },
+                { pos: 'bottom-[20%] left-[20%]', icon: 'group_off', label: 'Con người vs Con người', hoverBg: 'hover:bg-error', iconColor: 'text-error', nodeKey: 'quan-he', delay: 1.1 },
+                { pos: 'bottom-[20%] right-[20%]', icon: 'eco', label: 'Giải phóng con người', hoverBg: 'hover:bg-secondary-container', iconColor: 'text-secondary', nodeKey: 'giai-phong', delay: 1.3, isFeatured: true },
               ].map((node) => (
                 <div key={node.nodeKey} className={`absolute ${node.pos} z-20`}>
                   <motion.button
-                    className={`w-40 h-40 rounded-full bg-surface-container-high border ${node.isFeatured ? 'border-2 border-secondary shadow-[0_0_30px_rgba(45,90,39,0.15)]' : 'border-outline-variant'} flex flex-col items-center justify-center p-4 text-center ${node.hoverBg} transition-colors group`}
+                    className={`w-40 h-40 rounded-full bg-surface-container-high border ${node.isFeatured ? 'border-2 border-secondary shadow-[0_0_30px_rgba(45,90,39,0.15)]' : 'border-outline-variant'} flex flex-col items-center justify-center p-4 text-center ${node.hoverBg} transition-all group ${activeNode === node.nodeKey ? 'ring-4 ring-primary/40 scale-105' : ''}`}
                     initial={{ scale: 0, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ type: 'spring', stiffness: 200, damping: 20, delay: node.delay }}
                     whileHover={{ scale: 1.1, y: -5 }}
                     whileTap={{ scale: 0.9 }}
-                    onHoverStart={() => setActiveNode(node.nodeKey)}
-                    onHoverEnd={() => setActiveNode(null)}
+                    onClick={() => setActiveNode(node.nodeKey)}
                   >
                     <motion.span
                       className={`material-symbols-outlined ${node.iconColor} group-hover:text-white mb-2`}
@@ -427,93 +479,69 @@ export default function Home() {
             </motion.div>
 
             {/* Side Panel (Selected Node Data) */}
-            <motion.div className="w-full md:w-1/3 flex flex-col gap-6" variants={fadeInRight}>
-              <motion.div
-                className="p-8 bg-surface-container-high border border-outline-variant/10 rounded-xl"
-                whileHover={{ y: -4, boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <motion.span
-                    className="w-10 h-10 rounded bg-secondary-container flex items-center justify-center"
-                    whileHover={{ rotate: 15, scale: 1.1 }}
-                  >
-                    <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
-                  </motion.span>
-                  <h3 className="text-2xl font-headline font-bold tracking-tight">Giải phóng con người</h3>
-                </div>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xs uppercase tracking-widest font-bold text-secondary mb-2">Explanation</h4>
-                    <p className="text-on-surface-variant leading-relaxed">
-                      The transcendence of private property and the return of man to his own social existence. It is the definitive resolution of the antagonism between man and nature.
-                    </p>
-                  </div>
-                  <motion.div
-                    className="p-4 bg-surface-container rounded-lg border-l-4 border-secondary"
-                    initial={{ x: -10, opacity: 0 }}
-                    whileInView={{ x: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <h4 className="text-xs uppercase tracking-widest font-bold text-on-surface mb-2">Real-world Example</h4>
-                    <p className="text-sm italic text-on-surface-variant">
-                      Community-owned gardens where labor is shared, and the product of that labor directly sustains the participants without market mediation.
-                    </p>
-                  </motion.div>
-                  <motion.div
-                    className="bg-surface-container-highest p-5 rounded-lg"
-                    initial={{ y: 10, opacity: 0 }}
-                    whileInView={{ y: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <h4 className="text-xs uppercase tracking-widest font-bold text-tertiary mb-3">Key Takeaway</h4>
-                    <ul className="space-y-2 text-sm">
-                      {['Sản xuất xã hội có ý thức', 'Sự phát triển toàn diện của các cá nhân'].map((item, i) => (
-                        <motion.li
-                          key={i}
-                          className="flex gap-2"
-                          initial={{ x: -20, opacity: 0 }}
-                          whileInView={{ x: 0, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: 0.7 + i * 0.15 }}
-                        >
-                          <span className="material-symbols-outlined text-secondary text-base">check_circle</span> {item}
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                </div>
-                <motion.button
-                  className="w-full mt-8 py-3 bg-secondary text-on-secondary font-bold uppercase tracking-tighter"
-                  whileHover={{ scale: 1.02, opacity: 0.9 }}
-                  whileTap={{ scale: 0.98 }}
+            <motion.div className="w-full md:w-1/3 h-[700px] flex flex-col justify-center gap-6" variants={fadeInRight}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeNode}
+                  className="p-8 bg-surface-container-high border border-outline-variant/20 rounded-2xl shadow-xl w-full h-full flex flex-col"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  View Full Lecture
-                </motion.button>
-              </motion.div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <motion.span
+                      className="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center shadow-inner shrink-0"
+                      whileHover={{ rotate: 15, scale: 1.1 }}
+                    >
+                      <span className={`material-symbols-outlined ${nodeData.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nodeData.icon}</span>
+                    </motion.span>
+                    <h3 className="text-2xl font-headline font-bold tracking-tight text-on-surface">{nodeData.title}</h3>
+                  </div>
+                  
+                  <div className="space-y-6 flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                    {/* Explanation */}
+                    <div>
+                      <h4 className={`text-xs uppercase tracking-widest font-bold mb-2 ${nodeData.color}`}>Explanation</h4>
+                      <p className="text-on-surface-variant leading-relaxed text-base">
+                        {nodeData.explanation}
+                      </p>
+                    </div>
 
-              {/* Secondary Stats/Info Bento */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { value: '12', label: 'BÀI HỌC HOẠT ĐỘNG', colorClass: 'text-primary' },
-                  { value: '4.8k', label: 'THÀNH VIÊN LAB', colorClass: 'text-tertiary' },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    className="p-4 bg-surface-container border border-outline-variant/10 rounded-lg text-center"
-                    initial={{ y: 20, opacity: 0 }}
-                    whileInView={{ y: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 + i * 0.15 }}
-                    whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+                    {/* Real World Example */}
+                    <div
+                      className="p-5 bg-surface rounded-xl border-l-4 shadow-sm"
+                      style={{ borderLeftColor: nodeData.colorValue }}
+                    >
+                      <h4 className="text-xs uppercase tracking-widest font-bold text-on-surface mb-2">Real-world Example</h4>
+                      <p className="text-sm italic text-on-surface-variant leading-relaxed">
+                        {nodeData.realWorldExample}
+                      </p>
+                    </div>
+
+                    {/* Key Takeaways */}
+                    <div className="bg-surface-container-highest p-5 rounded-xl border border-outline-variant/10">
+                      <h4 className={`text-xs uppercase tracking-widest font-bold mb-4 ${nodeData.color}`}>Key Takeaway</h4>
+                      <ul className="space-y-3 text-sm">
+                        {nodeData.keyTakeaways.map((item, i) => (
+                          <li key={i} className="flex gap-3 items-start">
+                            <span className={`material-symbols-outlined text-[18px] shrink-0 ${nodeData.color}`}>check_circle</span> 
+                            <span className="text-on-surface-variant leading-snug">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    className="w-full mt-6 py-4 bg-primary text-on-primary font-bold uppercase tracking-widest rounded-xl hover:shadow-lg transition-shadow active:scale-95"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <AnimatedCounter value={stat.value} />
-                    <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">{stat.label}</span>
-                  </motion.div>
-                ))}
-              </div>
+                    Xem chi tiết bài học
+                  </motion.button>
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         </div>
@@ -834,7 +862,7 @@ export default function Home() {
               {/* Feature List */}
               <motion.div className="space-y-4 mb-10" variants={staggerContainer}>
                 {[
-                  { icon: 'timer', text: 'Giới hạn thời gian như đề thi thật (60 phút / 50 câu)', color: 'text-primary' },
+                  { icon: 'timer', text: 'Giới hạn thời gian như đề thi thật (60 phút / 60 câu)', color: 'text-primary' },
                   { icon: 'analytics', text: 'Phân tích kết quả chi tiết theo từng chuyên đề', color: 'text-tertiary' },
                   { icon: 'lightbulb', text: 'Giải thích đáp án đầy đủ & trích dẫn tài liệu', color: 'text-secondary' },
                   { icon: 'trending_up', text: 'Theo dõi tiến trình & xếp hạng trên bảng xếp hạng', color: 'text-error' },
