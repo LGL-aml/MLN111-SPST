@@ -1,4 +1,4 @@
-// Scenario stat effects - indexed by round (0-4)
+// Scenario stat effects - indexed by round (0-9)
 export const SCENARIO_EFFECTS = [
   // Round 1: Factory Labor
   {
@@ -20,7 +20,32 @@ export const SCENARIO_EFFECTS = [
     choiceA: { money: 5, alienation: 20, freedom: -15 },
     choiceB: { money: -15, alienation: -10, freedom: 25 },
   },
-  // Round 5: The Final Path
+  // Round 5: KPI & Burnout
+  {
+    choiceA: { money: 12, alienation: 15, freedom: -10 },
+    choiceB: { money: -8, alienation: -10, freedom: 12 },
+  },
+  // Round 6: Union / Collective Bargaining
+  {
+    choiceA: { money: 18, alienation: 20, freedom: -15 },
+    choiceB: { money: -5, alienation: -15, freedom: 18 },
+  },
+  // Round 7: Commodity Fetishism / Consumption
+  {
+    choiceA: { money: -15, alienation: 10, freedom: -5 },
+    choiceB: { money: -5, alienation: -10, freedom: 15 },
+  },
+  // Round 8: Worker Cooperative
+  {
+    choiceA: { money: 20, alienation: 10, freedom: -10 },
+    choiceB: { money: 5, alienation: -15, freedom: 20 },
+  },
+  // Round 9: Political Organization
+  {
+    choiceA: { money: 10, alienation: 10, freedom: -5 },
+    choiceB: { money: -10, alienation: -20, freedom: 25 },
+  },
+  // Round 10: The Leap Toward Liberation
   {
     choiceA: { money: 25, alienation: 25, freedom: -20 },
     choiceB: { money: -10, alienation: -20, freedom: 30 },
@@ -77,9 +102,12 @@ export function calculateNewStats(
     df = Math.round(df * (1 + player.alienation / 100));
   }
 
-  // Freedom Mechanic: Freedom can ONLY increase if Money > 30
-  if (df > 0 && player.money <= 30) {
-    df = 0;
+  // Freedom Mechanic: Material conditions constrain "freedom"
+  // - If Money is too low, freedom can't increase.
+  // - If Money is modest, freedom gains are reduced.
+  if (df > 0) {
+    if (player.money <= 20) df = 0;
+    else if (player.money <= 30) df = Math.round(df * 0.5);
   }
 
   // Survival Trap: If in survival crisis, Freedom gains reduced by 50%
@@ -114,10 +142,11 @@ export function checkWinCondition(player: {
   money: number;
   isAlive: boolean;
 }): boolean {
+  // Win is "liberation": high freedom, low alienation, and stable material base.
   return (
     player.isAlive &&
-    player.freedom > 70 &&
-    player.money > 20 &&
-    player.alienation < 30
+    player.freedom >= 65 &&
+    player.money >= 15 &&
+    player.alienation <= 45
   );
 }

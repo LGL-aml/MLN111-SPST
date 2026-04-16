@@ -224,7 +224,7 @@ function RulesModal({
                       Khả năng làm chủ bản thân và sức lao động.
                     </p>
                     <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-bold rounded-lg border border-emerald-500/20 text-center mt-auto">
-                      Chỉ tăng khi Tiền {">"} 30
+                      Tiền thấp → Tự do khó tăng (≤ 20: không tăng; 21–30: tăng 50%)
                     </div>
                   </div>
                 </div>
@@ -285,17 +285,17 @@ function RulesModal({
                   Điều Kiện Chiến Thắng
                 </h3>
                 <p className="mb-5 text-on-surface-variant text-lg leading-relaxed">
-                  Vượt qua <strong className="text-on-surface">5 tình huống</strong> và đạt trạng thái:
+                  Vượt qua <strong className="text-on-surface">10 tình huống</strong> và đạt trạng thái:
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-5 py-2.5 rounded-full font-bold shadow-sm">
-                    🕊️ Tự do {">"} 70
+                    🕊️ Tự do {">="} 65
                   </span>
                   <span className="bg-slate-500/10 border border-slate-500/20 text-slate-600 dark:text-slate-400 px-5 py-2.5 rounded-full font-bold shadow-sm">
-                    ⚙️ Tha hóa {"<"} 30
+                    ⚙️ Tha hóa {"≤"} 45
                   </span>
                   <span className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 px-5 py-2.5 rounded-full font-bold shadow-sm">
-                    💰 Tiền {">"} 20
+                    💰 Tiền {">="} 15
                   </span>
                 </div>
               </section>
@@ -550,6 +550,9 @@ function WaitingRoom({
 }) {
   const [copied, setCopied] = useState(false);
 
+  const nonHostPlayers = players.filter((p) => !p.isHost);
+  const canStart = nonHostPlayers.length > 0;
+
   const copyCode = () => {
     navigator.clipboard.writeText(room.code);
     setCopied(true);
@@ -633,12 +636,21 @@ function WaitingRoom({
         {/* Actions */}
         <div className="flex flex-col gap-3">
           {isHost ? (
-            <button
-              onClick={onStart}
-              className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-colors flex justify-center items-center gap-3 shadow-lg shadow-primary/20 active:scale-95"
-            >
-              <Zap className="w-6 h-6" /> Bắt Đầu Trò Chơi
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={onStart}
+                disabled={!canStart}
+                title={!canStart ? "Cần ít nhất 1 người chơi để bắt đầu" : ""}
+                className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-colors flex justify-center items-center gap-3 shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+              >
+                <Zap className="w-6 h-6" /> Bắt Đầu Trò Chơi
+              </button>
+              {!canStart && (
+                <div className="text-center text-sm text-on-surface-variant">
+                  Cần ít nhất <strong>1 người chơi</strong> để bắt đầu.
+                </div>
+              )}
+            </div>
           ) : (
             <div className="text-center py-4 text-on-surface-variant">
               <motion.div
@@ -692,8 +704,8 @@ function GameplayView({
     >
       {/* Round indicator */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          {[1, 2, 3, 4, 5].map((r) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {Array.from({ length: SCENARIOS.length }, (_, i) => i + 1).map((r) => (
             <div
               key={r}
               className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
@@ -725,7 +737,7 @@ function GameplayView({
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                Tình huống {room.currentRound}/5
+                Tình huống {room.currentRound}/{SCENARIOS.length}
               </span>
             </div>
             <h3 className="font-headline text-2xl md:text-3xl font-bold text-on-surface mb-4">
@@ -932,7 +944,8 @@ function RoundResultsView({
   isHost: boolean;
   onNextRound: () => void;
 }) {
-  const [timeLeft, setTimeLeft] = useState(room.currentRound === 5 ? 8 : 5);
+  const totalRounds = SCENARIOS.length;
+  const [timeLeft, setTimeLeft] = useState(room.currentRound === totalRounds ? 8 : 5);
 
   useEffect(() => {
     if (isHost) {
@@ -1051,7 +1064,7 @@ function RoundResultsView({
       <div className="text-center">
         {isHost ? (
           <div className="bg-primary/10 border border-primary/30 text-primary px-8 py-4 rounded-xl font-bold text-lg inline-flex items-center gap-3">
-            {room.currentRound >= 5 ? "Đang đếm ngược tới kết quả cuối..." : "Đang chuẩn bị vòng tiếp theo..."} ({timeLeft}s)
+            {room.currentRound >= totalRounds ? "Đang đếm ngược tới kết quả cuối..." : "Đang chuẩn bị vòng tiếp theo..."} ({timeLeft}s)
           </div>
         ) : (
           <motion.p
@@ -1380,6 +1393,12 @@ export default function Game() {
   }
 
   async function handleStartGame() {
+    const nonHostCount = (players ?? []).filter((p) => !p.isHost).length;
+    if (nonHostCount === 0) {
+      setError("Cần ít nhất 1 người chơi để bắt đầu!");
+      return;
+    }
+
     try {
       setError(null);
       await startGameMutation({

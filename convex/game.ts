@@ -22,6 +22,16 @@ export const startGame = mutation({
     if (room.status !== "lobby")
       throw new Error("Trò chơi đã bắt đầu rồi!");
 
+    // Don't start if there are no non-host players in the room.
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .take(50);
+    const hasAnyPlayer = players.some((p) => !p.isHost);
+    if (!hasAnyPlayer) {
+      throw new Error("Cần ít nhất 1 người chơi để bắt đầu!");
+    }
+
     await ctx.db.patch(room._id, {
       status: "playing",
       currentRound: 1,
@@ -205,7 +215,7 @@ export const nextRound = mutation({
       return;
     }
 
-    if (room.currentRound >= 5) {
+    if (room.currentRound >= 10) {
       await ctx.db.patch(args.roomId, {
         status: "finished",
         phase: "results",
