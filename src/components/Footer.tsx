@@ -10,7 +10,7 @@ export default function Footer() {
             "Đứng đầu có thực sự là tự do?"
           </p>
           <div className="text-on-surface-variant font-body text-sm tracking-wide mt-4">
-            © 1848-2024 Phòng thí nghiệm Giải phóng Con người. Hướng tới chân trời.
+            ©2026 Nền tảng học tập và giải trí về triết học Mác–Lênin. Được phát triển bởi Human Liberation Lab.
           </div>
         </div>
         <div className="flex flex-wrap justify-center gap-8 font-body text-sm tracking-wide">
