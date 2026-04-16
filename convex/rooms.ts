@@ -95,3 +95,54 @@ export const getPlayer = query({
     return await ctx.db.get(args.playerId);
   },
 });
+
+export const leave = mutation({
+  args: { playerId: v.id("players") },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get(args.playerId);
+    if (!player) return;
+
+    const room = await ctx.db.get(player.roomId);
+
+    // Host leaves: end/close the room depending on phase.
+    if (player.isHost) {
+      if (room) {
+        if (room.status === "lobby") {
+          const allPlayers = await ctx.db
+            .query("players")
+            .withIndex("by_roomId", (q) => q.eq("roomId", player.roomId))
+            .take(200);
+          for (const p of allPlayers) {
+            await ctx.db.delete(p._id);
+          }
+          await ctx.db.delete(room._id);
+          return;
+        }
+
+        // If the game already started, finish it so remaining players aren't stuck.
+        await ctx.db.patch(room._id, {
+          status: "finished",
+          phase: "results",
+          randomEvent: null,
+        });
+      }
+
+      await ctx.db.delete(player._id);
+      return;
+    }
+
+    // Non-host leaves:
+    // - In lobby: remove them from the waiting list.
+    // - In playing/finished: mark as eliminated so they don't block submissions.
+    if (!room || room.status === "lobby") {
+      await ctx.db.delete(player._id);
+      return;
+    }
+
+    await ctx.db.patch(player._id, {
+      isAlive: false,
+      hasSubmitted: true,
+      currentChoice: null,
+    });
+  },
+});

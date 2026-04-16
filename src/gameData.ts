@@ -196,6 +196,7 @@ export interface RandomEventDisplay {
   name: string;
   description: string;
   icon: string;
+  effects: { money: number; alienation: number; freedom: number };
 }
 
 export const RANDOM_EVENTS_DISPLAY: Record<string, RandomEventDisplay> = {
@@ -205,6 +206,7 @@ export const RANDOM_EVENTS_DISPLAY: Record<string, RandomEventDisplay> = {
     description:
       "Bạn bị ốm nặng. Không có bảo hiểm y tế đầy đủ, chi phí điều trị rất cao.",
     icon: "🏥",
+    effects: { money: -15, alienation: 0, freedom: 0 },
   },
   device_broken: {
     id: "device_broken",
@@ -212,5 +214,6 @@ export const RANDOM_EVENTS_DISPLAY: Record<string, RandomEventDisplay> = {
     description:
       "Công cụ làm việc của bạn bị hỏng. Bạn phải tự bỏ tiền túi để sửa chữa hoặc thay mới.",
     icon: "🔧",
+    effects: { money: -10, alienation: 0, freedom: 0 },
   },
 };

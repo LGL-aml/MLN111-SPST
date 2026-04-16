@@ -24,12 +24,32 @@ import {
   LogOut,
   ChevronRight,
   Brain,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import {
   SCENARIOS,
   RANDOM_EVENTS_DISPLAY,
 } from "../gameData";
+import ovtkMp3 from "../public/sound/ovtk.mp3";
+import liberationMp3 from "../public/sound/liberation.mp3";
 import { checkWinCondition, calculateScore } from "../../convex/gameData";
+
+function sortPlayersForLeaderboard(players: Doc<"players">[]) {
+  const hasAnyAlive = players.some((p) => p.isAlive);
+
+  return [...players].sort((a, b) => {
+    if (hasAnyAlive && a.isAlive !== b.isAlive) {
+      return a.isAlive ? -1 : 1;
+    }
+
+    const scoreA = calculateScore(a);
+    const scoreB = calculateScore(b);
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    return b.freedom - a.freedom;
+  });
+}
 
 // ============================================================
 // STAT BAR COMPONENT
@@ -541,12 +561,16 @@ function WaitingRoom({
   isHost,
   onStart,
   onLeave,
+  musicEnabled,
+  onToggleMusic,
 }: {
   room: Doc<"rooms">;
   players: Doc<"players">[];
   isHost: boolean;
   onStart: () => void;
   onLeave: () => void;
+  musicEnabled: boolean;
+  onToggleMusic: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -585,11 +609,23 @@ function WaitingRoom({
           <button
             onClick={copyCode}
             className="p-3 rounded-xl bg-surface-variant/50 hover:bg-surface-variant transition-colors text-on-surface-variant"
+            title="Sao chép mã phòng"
           >
             {copied ? (
               <Check className="w-6 h-6 text-emerald-500" />
             ) : (
               <Copy className="w-6 h-6" />
+            )}
+          </button>
+          <button
+            onClick={onToggleMusic}
+            className="p-3 rounded-xl bg-surface-variant/50 hover:bg-surface-variant transition-colors text-on-surface-variant"
+            title={musicEnabled ? "Tắt nhạc" : "Bật nhạc"}
+          >
+            {musicEnabled ? (
+              <Volume2 className="w-6 h-6" />
+            ) : (
+              <VolumeX className="w-6 h-6" />
             )}
           </button>
         </div>
@@ -683,18 +719,54 @@ function GameplayView({
   currentPlayer,
   players,
   onChoice,
+  onLeave,
+  onForceRound,
 }: {
   room: Doc<"rooms">;
   currentPlayer: Doc<"players">;
   players: Doc<"players">[];
   onChoice: (choice: "A" | "B") => void;
+  onLeave: () => void;
+  onForceRound: () => void;
 }) {
   const [showPhilosophy, setShowPhilosophy] = useState(false);
+  const [isSpectating, setIsSpectating] = useState(false);
+  const [hostTimeLeft, setHostTimeLeft] = useState(35);
+  const [hostForcing, setHostForcing] = useState(false);
   const scenario = SCENARIOS[room.currentRound - 1];
   if (!scenario) return null;
 
   const alivePlayers = players.filter((p) => p.isAlive && !p.isHost);
   const submittedCount = alivePlayers.filter((p) => p.hasSubmitted).length;
+
+  useEffect(() => {
+    setHostTimeLeft(35);
+    setHostForcing(false);
+  }, [room.currentRound]);
+
+  useEffect(() => {
+    if (!currentPlayer.isHost) return;
+    if (hostForcing) return;
+
+    // If everyone already submitted, the server will process automatically.
+    if (alivePlayers.length > 0 && submittedCount >= alivePlayers.length) return;
+
+    if (hostTimeLeft <= 0) {
+      setHostForcing(true);
+      onForceRound();
+      return;
+    }
+
+    const t = setTimeout(() => setHostTimeLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [
+    currentPlayer.isHost,
+    hostForcing,
+    hostTimeLeft,
+    alivePlayers.length,
+    submittedCount,
+    onForceRound,
+  ]);
 
   return (
     <motion.div
@@ -759,12 +831,33 @@ function GameplayView({
               className="bg-surface rounded-2xl p-8 border border-primary/30 text-center"
             >
               <Crown className="w-12 h-12 text-primary mx-auto mb-3" />
-              <p className="text-primary text-lg font-medium">
-                Bạn là Quản Trò
-              </p>
+              <p className="text-primary text-lg font-medium">Bạn là Quản Trò</p>
               <p className="text-on-surface-variant text-sm mt-2">
                 Đang chờ người chơi lựa chọn... ({submittedCount}/{alivePlayers.length})
               </p>
+
+              {alivePlayers.length > 0 && submittedCount < alivePlayers.length && (
+                <div className="mt-4 space-y-3">
+                  <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70">
+                    Tự kết thúc vòng sau: <span className="text-primary">{hostTimeLeft}s</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (hostForcing) return;
+                      setHostForcing(true);
+                      onForceRound();
+                    }}
+                    disabled={hostForcing}
+                    className="w-full sm:w-auto mx-auto px-6 py-3 rounded-xl font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                    title="Tự chọn ngẫu nhiên cho người chưa chọn và kết thúc vòng"
+                  >
+                    {hostForcing ? "Đang xử lý..." : "Kết thúc vòng (auto cho người chưa chọn)"}
+                  </button>
+                  <div className="text-xs text-on-surface-variant">
+                    Dùng khi có người "ở lỳ" không chọn khiến game bị đứng.
+                  </div>
+                </div>
+              )}
             </motion.div>
           ) : currentPlayer.isAlive && !currentPlayer.hasSubmitted ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -830,12 +923,60 @@ function GameplayView({
                 {submittedCount}/{alivePlayers.length} người đã chọn
               </p>
             </motion.div>
+          ) : isSpectating ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-primary/5 rounded-2xl p-8 border border-primary/20 text-center"
+            >
+              <motion.div
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-primary text-lg font-bold"
+              >
+                Bạn đã bị loại — đang xem với tư cách khán giả
+              </motion.div>
+              <p className="text-on-surface-variant text-sm mt-2">
+                Bạn có thể đợi để xem kết quả cuối cùng.
+              </p>
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={onLeave}
+                  className="px-5 py-3 rounded-xl font-bold border border-outline-variant/60 text-on-surface-variant hover:text-red-500 hover:bg-red-500/5 transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-5 h-5" /> Quay về sảnh chờ
+                </button>
+                <button
+                  onClick={() => setIsSpectating(false)}
+                  className="px-5 py-3 rounded-xl font-bold bg-surface-variant/30 hover:bg-surface-variant/50 text-on-surface transition-colors"
+                >
+                  Xem lại thông báo
+                </button>
+              </div>
+            </motion.div>
           ) : (
             <div className="bg-red-500/5 rounded-2xl p-8 border border-red-500/20 text-center">
               <Skull className="w-12 h-12 text-red-500 mx-auto mb-3" />
               <p className="text-red-600 dark:text-red-400 text-lg font-bold">
                 Bạn đã bị loại khỏi trò chơi
               </p>
+              <p className="text-on-surface-variant text-sm mt-2">
+                Bạn có thể quay về sảnh chờ hoặc đợi để xem kết quả cuối cùng.
+              </p>
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={onLeave}
+                  className="px-5 py-3 rounded-xl font-bold border border-outline-variant/60 text-on-surface-variant hover:text-red-500 hover:bg-red-500/5 transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-5 h-5" /> Quay về sảnh chờ
+                </button>
+                <button
+                  onClick={() => setIsSpectating(true)}
+                  className="px-5 py-3 rounded-xl font-bold bg-primary text-on-primary hover:bg-primary/90 transition-colors"
+                >
+                  Đợi xem kết quả cuối
+                </button>
+              </div>
             </div>
           )}
 
@@ -937,15 +1078,18 @@ function RoundResultsView({
   currentPlayer,
   isHost,
   onNextRound,
+  onLeave,
 }: {
   room: Doc<"rooms">;
   players: Doc<"players">[];
   currentPlayer: Doc<"players">;
   isHost: boolean;
   onNextRound: () => void;
+  onLeave: () => void;
 }) {
   const totalRounds = SCENARIOS.length;
   const [timeLeft, setTimeLeft] = useState(room.currentRound === totalRounds ? 8 : 5);
+  const [dismissEliminated, setDismissEliminated] = useState(false);
 
   useEffect(() => {
     if (isHost) {
@@ -962,14 +1106,9 @@ function RoundResultsView({
     ? RANDOM_EVENTS_DISPLAY[room.randomEvent]
     : null;
 
-  const sortedPlayers = [...players]
-    .filter((p) => !p.isHost)
-    .sort((a, b) => {
-      const scoreA = calculateScore(a);
-      const scoreB = calculateScore(b);
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      return b.freedom - a.freedom;
-    });
+  const sortedPlayers = sortPlayersForLeaderboard(
+    players.filter((p) => !p.isHost)
+  );
 
   return (
     <motion.div
@@ -983,6 +1122,42 @@ function RoundResultsView({
         </h2>
       </div>
 
+      {!isHost && !currentPlayer.isAlive && !dismissEliminated && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Skull className="w-6 h-6 text-red-500 mt-0.5" />
+              <div>
+                <div className="font-bold text-red-600 dark:text-red-400">
+                  Bạn đã bị loại
+                </div>
+                <div className="text-sm text-on-surface-variant">
+                  Bạn có thể quay về sảnh chờ hoặc tiếp tục đợi để xem kết quả cuối cùng.
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={onLeave}
+                className="px-4 py-2.5 rounded-xl font-bold border border-outline-variant/60 text-on-surface-variant hover:text-red-500 hover:bg-red-500/5 transition-colors inline-flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-5 h-5" /> Quay về sảnh chờ
+              </button>
+              <button
+                onClick={() => setDismissEliminated(true)}
+                className="px-4 py-2.5 rounded-xl font-bold bg-surface-variant/30 hover:bg-surface-variant/50 text-on-surface transition-colors"
+              >
+                Tiếp tục xem
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Random Event */}
       {randomEvent && (
         <motion.div
@@ -995,6 +1170,57 @@ function RoundResultsView({
             Sự kiện ngẫu nhiên: {randomEvent.name}
           </h3>
           <p className="text-on-surface-variant">{randomEvent.description}</p>
+
+          <div className="mt-4">
+            <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 mb-2">
+              Ảnh hưởng
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {randomEvent.effects.money !== 0 && (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    randomEvent.effects.money > 0
+                      ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-700 dark:text-emerald-300"
+                      : "bg-red-500/15 border-red-500/25 text-red-700 dark:text-red-300"
+                  }`}
+                >
+                  💰 {randomEvent.effects.money > 0 ? "+" : ""}
+                  {randomEvent.effects.money}
+                </span>
+              )}
+              {randomEvent.effects.alienation !== 0 && (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    randomEvent.effects.alienation > 0
+                      ? "bg-amber-500/15 border-amber-500/25 text-amber-700 dark:text-amber-300"
+                      : "bg-emerald-500/15 border-emerald-500/25 text-emerald-700 dark:text-emerald-300"
+                  }`}
+                >
+                  ⚙️ {randomEvent.effects.alienation > 0 ? "+" : ""}
+                  {randomEvent.effects.alienation}
+                </span>
+              )}
+              {randomEvent.effects.freedom !== 0 && (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    randomEvent.effects.freedom > 0
+                      ? "bg-primary/15 border-primary/25 text-primary"
+                      : "bg-red-500/15 border-red-500/25 text-red-700 dark:text-red-300"
+                  }`}
+                >
+                  🕊️ {randomEvent.effects.freedom > 0 ? "+" : ""}
+                  {randomEvent.effects.freedom}
+                </span>
+              )}
+              {randomEvent.effects.money === 0 &&
+                randomEvent.effects.alienation === 0 &&
+                randomEvent.effects.freedom === 0 && (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold border bg-surface-variant/20 border-outline-variant/40 text-on-surface-variant">
+                    Không thay đổi
+                  </span>
+                )}
+            </div>
+          </div>
         </motion.div>
       )}
 
@@ -1081,6 +1307,173 @@ function RoundResultsView({
 }
 
 // ============================================================
+// TOP 3 PODIUM (FINAL ANIMATION)
+// ============================================================
+function Top3Podium({
+  players,
+}: {
+  players: Doc<"players">[];
+}) {
+  const top3 = players.slice(0, 3);
+
+  if (top3.length === 0) return null;
+
+  // Display order: #2, #1, #3 (winner centered)
+  const display = [
+    top3[1] ? { p: top3[1], rank: 2 as const } : null,
+    top3[0] ? { p: top3[0], rank: 1 as const } : null,
+    top3[2] ? { p: top3[2], rank: 3 as const } : null,
+  ].filter(Boolean) as Array<{ p: Doc<"players">; rank: 1 | 2 | 3 }>;
+
+  const cardByRank: Record<
+    1 | 2 | 3,
+    { bg: string; ring: string; medal: string; height: string }
+  > = {
+    1: {
+      bg: "bg-amber-500/10",
+      ring: "ring-2 ring-amber-500/40",
+      medal: "🥇",
+      height: "h-[210px] md:h-[240px]",
+    },
+    2: {
+      bg: "bg-slate-500/10",
+      ring: "ring-1 ring-slate-400/30",
+      medal: "🥈",
+      height: "h-[180px] md:h-[210px]",
+    },
+    3: {
+      bg: "bg-amber-900/10",
+      ring: "ring-1 ring-amber-800/25",
+      medal: "🥉",
+      height: "h-[165px] md:h-[195px]",
+    },
+  };
+
+  const container = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.12 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 18, scale: 0.96 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.55, bounce: 0.35 },
+    },
+  };
+
+  return (
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="visible"
+      className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant overflow-hidden relative"
+    >
+      {/* Subtle spotlight */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[520px] h-[220px] rounded-full bg-gradient-to-b from-primary/15 to-transparent blur-2xl" />
+
+      <div className="flex items-center justify-between mb-4 relative">
+        <h3 className="font-bold text-on-surface flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-amber-500" /> Vinh danh Top 3
+        </h3>
+
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0.4, rotate: -8 }}
+          animate={{ opacity: [0.35, 0.9, 0.35], rotate: [-8, 8, -8] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          className="text-sm text-amber-500 font-bold"
+        >
+          ✨
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 md:gap-5 items-end relative">
+        {display.map(({ p, rank }) => {
+          const s = cardByRank[rank];
+          const isWinner = rank === 1;
+
+          return (
+            <motion.div
+              key={p._id}
+              variants={item}
+              className={[
+                "rounded-2xl border border-outline-variant/60",
+                "flex flex-col items-center justify-end text-center p-4 md:p-5",
+                s.bg,
+                s.ring,
+                s.height,
+                isWinner ? "shadow-lg shadow-amber-500/15" : "shadow-sm",
+              ].join(" ")}
+            >
+              {/* Floating medal */}
+              <motion.div
+                initial={{ y: 0 }}
+                animate={{ y: isWinner ? [-2, 2, -2] : [-1, 1, -1] }}
+                transition={{
+                  duration: isWinner ? 1.6 : 2.1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="text-3xl md:text-4xl mb-2"
+              >
+                {s.medal}
+              </motion.div>
+
+              {/* Winner crown pulse */}
+              {isWinner && (
+                <motion.div
+                  initial={{ scale: 1, opacity: 0.85 }}
+                  animate={{
+                    scale: [1, 1.08, 1],
+                    opacity: [0.7, 1, 0.7],
+                  }}
+                  transition={{
+                    duration: 1.7,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="mb-1 text-primary"
+                  title="Top 1"
+                >
+                  <Crown className="w-7 h-7 md:w-8 md:h-8" />
+                </motion.div>
+              )}
+
+              <div className="px-4 py-2 rounded-full bg-surface border border-outline-variant max-w-full mb-2">
+                <div className="font-bold text-on-surface text-sm md:text-base text-center whitespace-normal break-words">
+                  {p.name}
+                </div>
+              </div>
+
+              <div className="mt-2 text-xs font-mono text-on-surface-variant flex items-center gap-2">
+                <span>💰 {p.money}</span>
+                <span>⚙️ {p.alienation}</span>
+                <span>🕊️ {p.freedom}</span>
+              </div>
+
+              <div className="mt-3 font-mono font-bold text-primary text-lg">
+                {calculateScore(p)}
+              </div>
+
+              <div className="text-[11px] text-on-surface-variant mt-1">
+                Hạng {rank}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================
 // FINAL RESULTS VIEW
 // ============================================================
 function FinalResultsView({
@@ -1094,16 +1487,16 @@ function FinalResultsView({
 }) {
   const isWinner = !currentPlayer.isHost && checkWinCondition(currentPlayer);
 
-  const sortedPlayers = [...players]
-    .filter((p) => !p.isHost)
-    .sort((a, b) => {
-      const scoreA = calculateScore(a);
-      const scoreB = calculateScore(b);
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      return b.freedom - a.freedom;
-    });
+  const nonHostPlayers = players.filter((p) => !p.isHost);
+  const sortedPlayers = sortPlayersForLeaderboard(nonHostPlayers);
 
-  const winners = players.filter((p) => !p.isHost && checkWinCondition(p));
+  // Podium: do NOT honor eliminated players, unless everyone is eliminated.
+  const hasAnyAlive = sortedPlayers.some((p) => p.isAlive);
+  const podiumPlayers = hasAnyAlive
+    ? sortedPlayers.filter((p) => p.isAlive)
+    : sortedPlayers;
+
+  const winners = nonHostPlayers.filter((p) => checkWinCondition(p));
 
   return (
     <motion.div
@@ -1185,6 +1578,9 @@ function FinalResultsView({
           </div>
         </div>
       )}
+
+      {/* Top 3 Podium */}
+      <Top3Podium players={podiumPlayers} />
 
       {/* Winners */}
       {winners.length > 0 && (
@@ -1295,6 +1691,13 @@ export default function Game() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Background music (lobby + gameplay)
+  const lobbyAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const gameAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const [lobbyMusicEnabled, setLobbyMusicEnabled] = useState(true);
+  const [musicVolume, setMusicVolume] = useState(0.35);
+  const [showVolumePanel, setShowVolumePanel] = useState(false);
+
   // Session persistence
   const [playerId, setPlayerId] = useState<string | null>(() => {
     try {
@@ -1339,9 +1742,11 @@ export default function Game() {
   // Convex mutations
   const createRoomMutation = useMutation(api.rooms.create);
   const joinRoomMutation = useMutation(api.rooms.join);
+  const leaveRoomMutation = useMutation(api.rooms.leave);
   const startGameMutation = useMutation(api.game.startGame);
   const submitChoiceMutation = useMutation(api.game.submitChoice);
   const nextRoundMutation = useMutation(api.game.nextRound);
+  const forceProcessRoundMutation = useMutation(api.game.forceProcessRound);
 
   // Reset session if room/player not found
   useEffect(() => {
@@ -1354,11 +1759,92 @@ export default function Game() {
   }, [room, currentPlayer, roomId, playerId]);
 
   function clearSession() {
+    const lobbyAudio = lobbyAudioRef.current;
+    if (lobbyAudio) {
+      lobbyAudio.pause();
+      lobbyAudio.currentTime = 0;
+    }
+
+    const gameAudio = gameAudioRef.current;
+    if (gameAudio) {
+      gameAudio.pause();
+      gameAudio.currentTime = 0;
+    }
+
     localStorage.removeItem("gameSession");
     setPlayerId(null);
     setRoomId(null);
     setError(null);
   }
+
+  async function handleLeaveGame() {
+    const pid = playerId;
+    if (!pid) {
+      clearSession();
+      return;
+    }
+
+    try {
+      await leaveRoomMutation({ playerId: pid as Id<"players"> });
+    } catch {
+      // Best-effort leave; still clear local session.
+    } finally {
+      clearSession();
+    }
+  }
+
+  useEffect(() => {
+    const lobbyAudio = lobbyAudioRef.current;
+    const gameAudio = gameAudioRef.current;
+
+    const stop = (audio: HTMLAudioElement | null) => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    };
+
+    const volume = Math.min(1, Math.max(0, musicVolume));
+
+    if (lobbyAudio) {
+      lobbyAudio.loop = true;
+      lobbyAudio.volume = volume;
+    }
+
+    if (gameAudio) {
+      gameAudio.loop = true;
+      gameAudio.volume = volume;
+    }
+
+    if (!lobbyMusicEnabled) {
+      stop(lobbyAudio);
+      stop(gameAudio);
+      return;
+    }
+
+    if (room?.status === "lobby") {
+      stop(gameAudio);
+      if (lobbyAudio) {
+        void lobbyAudio.play().catch(() => {
+          // Autoplay might be blocked; user can toggle the music button to retry.
+        });
+      }
+      return;
+    }
+
+    if (room?.status === "playing") {
+      stop(lobbyAudio);
+      if (gameAudio) {
+        void gameAudio.play().catch(() => {
+          // Autoplay might be blocked; user can interact (e.g. toggle music) to retry.
+        });
+      }
+      return;
+    }
+
+    // finished / unknown
+    stop(lobbyAudio);
+    stop(gameAudio);
+  }, [room?.status, lobbyMusicEnabled, musicVolume]);
 
   async function handleCreateRoom(hostName: string, password?: string) {
     if (password !== "Admin@123") {
@@ -1371,6 +1857,10 @@ export default function Game() {
       const result = await createRoomMutation({ hostName, password });
       setPlayerId(result.playerId);
       setRoomId(result.roomId);
+
+      // Enable and attempt to start lobby music immediately (user gesture: create room button).
+      setLobbyMusicEnabled(true);
+      void lobbyAudioRef.current?.play().catch(() => {});
     } catch (e: any) {
       setError(e.message || "Không thể tạo phòng");
     } finally {
@@ -1385,6 +1875,10 @@ export default function Game() {
       const result = await joinRoomMutation({ code, name });
       setPlayerId(result.playerId);
       setRoomId(result.roomId);
+
+      // Enable and attempt to start lobby music (user gesture: join button).
+      setLobbyMusicEnabled(true);
+      void lobbyAudioRef.current?.play().catch(() => {});
     } catch (e: any) {
       setError(e.message || "Không thể tham gia phòng");
     } finally {
@@ -1405,6 +1899,10 @@ export default function Game() {
         roomId: roomId as Id<"rooms">,
         playerId: playerId as Id<"players">,
       });
+
+      if (lobbyMusicEnabled) {
+        void gameAudioRef.current?.play().catch(() => {});
+      }
     } catch (e: any) {
       setError(e.message || "Không thể bắt đầu");
     }
@@ -1419,6 +1917,18 @@ export default function Game() {
       });
     } catch (e: any) {
       setError(e.message || "Không thể gửi lựa chọn");
+    }
+  }
+
+  async function handleForceProcessRound() {
+    try {
+      setError(null);
+      await forceProcessRoundMutation({
+        roomId: roomId as Id<"rooms">,
+        playerId: playerId as Id<"players">,
+      });
+    } catch (e: any) {
+      setError(e.message || "Không thể kết thúc vòng");
     }
   }
 
@@ -1456,7 +1966,9 @@ export default function Game() {
         players={players ?? []}
         isHost={isHost}
         onStart={handleStartGame}
-        onLeave={clearSession}
+        onLeave={handleLeaveGame}
+        musicEnabled={lobbyMusicEnabled}
+        onToggleMusic={() => setLobbyMusicEnabled((v) => !v)}
       />
     );
   } else if (room.status === "playing" && room.phase === "choosing") {
@@ -1466,6 +1978,8 @@ export default function Game() {
         currentPlayer={currentPlayer}
         players={players ?? []}
         onChoice={handleSubmitChoice}
+        onLeave={handleLeaveGame}
+        onForceRound={handleForceProcessRound}
       />
     );
   } else if (room.status === "playing" && room.phase === "results") {
@@ -1476,6 +1990,7 @@ export default function Game() {
         currentPlayer={currentPlayer}
         isHost={isHost}
         onNextRound={handleNextRound}
+        onLeave={handleLeaveGame}
       />
     );
   } else if (room.status === "finished") {
@@ -1483,7 +1998,7 @@ export default function Game() {
       <FinalResultsView
         players={players ?? []}
         currentPlayer={currentPlayer}
-        onPlayAgain={clearSession}
+        onPlayAgain={handleLeaveGame}
       />
     );
   } else {
@@ -1499,6 +2014,8 @@ export default function Game() {
 
   return (
     <div className="w-full flex-grow flex flex-col items-center justify-start pt-24 pb-12 relative font-sans overflow-hidden">
+      <audio ref={lobbyAudioRef} src={ovtkMp3} preload="auto" className="hidden" />
+      <audio ref={gameAudioRef} src={liberationMp3} preload="auto" className="hidden" />
       {/* Top controls */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1511,7 +2028,86 @@ export default function Game() {
             Phòng: <span className="font-mono font-bold">{room.code}</span>
           </div>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {isInRoom && (
+            <button
+              onClick={handleLeaveGame}
+              className="flex items-center gap-2 bg-surface border border-outline-variant text-on-surface-variant px-4 py-2.5 rounded-full hover:border-red-500 hover:text-red-500 hover:bg-red-500/5 transition-all font-bold shadow-sm hover:shadow-md active:scale-95"
+              title="Rời game"
+            >
+              <LogOut className="w-5 h-5" />
+              Rời game
+            </button>
+          )}
+
+          {isInRoom && (
+            <div className="relative">
+              <button
+                onClick={() => setShowVolumePanel((v) => !v)}
+                className="flex items-center justify-center bg-surface border border-outline-variant text-on-surface-variant w-11 h-11 rounded-full hover:border-primary hover:text-primary transition-all shadow-sm hover:shadow-md active:scale-95"
+                title="Âm lượng"
+              >
+                {lobbyMusicEnabled && musicVolume > 0 ? (
+                  <Volume2 className="w-5 h-5" />
+                ) : (
+                  <VolumeX className="w-5 h-5" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showVolumePanel && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-64 bg-surface border border-outline-variant rounded-2xl shadow-lg p-4"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                        Âm lượng
+                      </div>
+                      <button
+                        onClick={() => setLobbyMusicEnabled((v) => !v)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-full border border-outline-variant/60 hover:border-primary hover:text-primary transition-colors"
+                        title={lobbyMusicEnabled ? "Tắt nhạc" : "Bật nhạc"}
+                      >
+                        {lobbyMusicEnabled ? "Tắt" : "Bật"}
+                      </button>
+                    </div>
+
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(musicVolume * 100)}
+                      onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
+                      className="w-full"
+                      aria-label="Điều chỉnh âm lượng"
+                    />
+
+                    <div className="mt-2 text-xs text-on-surface-variant flex justify-between">
+                      <span>0%</span>
+                      <span className="font-mono font-bold text-on-surface">
+                        {Math.round(musicVolume * 100)}%
+                      </span>
+                      <span>100%</span>
+                    </div>
+
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => setShowVolumePanel(false)}
+                        className="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        Đóng
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           <button
             onClick={() => setShowRules(true)}
             className="flex items-center gap-2 bg-surface border border-outline-variant text-on-surface-variant px-5 py-2.5 rounded-full hover:border-primary hover:text-primary transition-all font-bold shadow-sm hover:shadow-md active:scale-95"

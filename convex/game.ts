@@ -177,6 +177,40 @@ async function processRound(ctx: MutationCtx, roomId: Id<"rooms">) {
   });
 }
 
+export const forceProcessRound = mutation({
+  args: { roomId: v.id("rooms"), playerId: v.id("players") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) throw new Error("Phòng không tồn tại!");
+
+    const player = await ctx.db.get(args.playerId);
+    if (!player || !player.isHost)
+      throw new Error("Chỉ chủ phòng mới có thể dùng chức năng này!");
+
+    if (room.status !== "playing" || room.phase !== "choosing") {
+      throw new Error("Không thể kết thúc vòng lúc này!");
+    }
+
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .take(50);
+
+    for (const p of players) {
+      if (p.isHost || !p.isAlive) continue;
+      if (p.hasSubmitted) continue;
+
+      const autoChoice = Math.random() < 0.5 ? "A" : "B";
+      await ctx.db.patch(p._id, {
+        currentChoice: autoChoice,
+        hasSubmitted: true,
+      });
+    }
+
+    await processRound(ctx, args.roomId);
+  },
+});
+
 export const nextRound = mutation({
   args: { roomId: v.id("rooms"), playerId: v.id("players") },
   handler: async (ctx, args) => {
