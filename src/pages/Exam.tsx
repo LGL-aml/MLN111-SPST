@@ -99,10 +99,9 @@ export default function Exam() {
   }, [questions.length, submitted]);
 
   const formatTime = (secs: number) => {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
+    const totalMinutes = Math.floor(secs / 60);
     const s = secs % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${String(totalMinutes).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const total = questions.length;
@@ -374,7 +373,7 @@ export default function Exam() {
           <div style={{ width: '120px' }} />
           {/* Timer aligned with middle panel */}
           <div style={{ width: '250px', display: 'flex', alignItems: 'center' }}>
-            <span style={{ fontWeight: 'bold', color: '#d9534f', fontSize: '13px' }}>
+            <span style={{ fontWeight: 'bold', color: '#d9534f', fontSize: '20px', lineHeight: 1 }}>
               {formatTime(timeLeft)}
             </span>
           </div>
