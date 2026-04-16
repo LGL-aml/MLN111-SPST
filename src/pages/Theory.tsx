@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Link as LinkIcon, Settings, AlignLeft, Scale, Globe, CheckCircle, ChevronDown } from 'lucide-react';
 
+import angghenImg from '../public/angghen.png';
+
 const SECTIONS = [
   { id: 's1', title: 'Khái niệm con người', icon: User },
   { id: 's2', title: 'Tha hóa là gì?', icon: LinkIcon },
@@ -383,14 +385,31 @@ export default function Theory() {
                 <p className="text-base text-outline mt-1">Mục đích cuối cùng của triết học Mác–Lênin</p>
               </div>
             </div>
-            <p className="text-base text-on-surface-variant leading-relaxed">
-              Giải phóng con người là quá trình xóa bỏ các hình thức áp bức, bóc lột, bất công và sự tha hóa để con người có thể phát triển tự do, toàn diện mọi năng lực của mình.
-            </p>
-            <figure className="border-l-4 border-primary pl-4 py-2 mt-4 bg-primary/5 rounded-r-xl pr-4">
-              <blockquote className="italic text-on-surface font-medium leading-relaxed">
-                "Sự phát triển tự do của mỗi người là điều kiện cho sự phát triển tự do của tất cả mọi người."
-              </blockquote>
-            </figure>
+            <div className="mt-5 flex gap-5 md:gap-6 items-stretch">
+              {/* Left: Image */}
+              <div className="flex-[4] min-w-[160px] max-w-[420px]">
+                <img
+                  src={angghenImg}
+                  alt="F. Ăngghen"
+                  className="w-full aspect-[3/4] object-cover rounded-2xl border border-outline-variant shadow-sm max-h-[400px]"
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Right: Content */}
+              <div className="flex-[6] min-w-0 flex flex-col justify-center gap-4">
+                <p className="text-base text-on-surface-variant leading-relaxed">
+                  Giải phóng con người là quá trình xóa bỏ các hình thức áp bức, bóc lột, bất công và sự tha hóa để con người có thể phát triển tự do, toàn diện mọi năng lực của mình.
+                </p>
+
+                <figure className="border border-outline-variant/60 bg-primary/5 rounded-2xl p-4 shadow-sm">
+                  <blockquote className="italic text-on-surface font-medium leading-relaxed text-[14px] sm:text-[15px] md:text-base">
+                    “Sự phát triển tự do của mỗi người là điều kiện cho sự phát triển tự do của tất cả mọi người.”
+                  </blockquote>
+                  <figcaption className="text-xs font-bold text-primary mt-2 uppercase tracking-wider">— Mác – Ăngghen</figcaption>
+                </figure>
+              </div>
+            </div>
           </div>
 
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm">
