@@ -11,6 +11,7 @@ import Game from './pages/Game';
 import Leaderboard from './pages/Leaderboard';
 import Quiz from './pages/Quiz';
 import Theory from './pages/Theory';
+import About from './pages/About';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="quiz" element={<Quiz />} />
             <Route path="theory" element={<Theory />} />
             <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="about" element={<About />} />
           </Route>
         </Routes>
       </BrowserRouter>
