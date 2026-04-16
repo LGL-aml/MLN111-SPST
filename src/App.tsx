@@ -13,6 +13,7 @@ import Quiz from './pages/Quiz';
 import Theory from './pages/Theory';
 import About from './pages/About';
 import Exam from './pages/Exam';
+import Review from './pages/Review';
 
 export default function App() {
   return (
@@ -20,8 +21,9 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          {/* Full-screen exam – outside Layout so no navbar/footer */}
+          {/* Full-screen modes – outside Layout so no navbar/footer */}
           <Route path="/quiz/exam" element={<Exam />} />
+          <Route path="/quiz/review" element={<Review />} />
 
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />

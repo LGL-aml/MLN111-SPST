@@ -34,4 +34,11 @@ export default defineSchema({
     vectorField: "embedding",
     dimensions: 768,
   }),
+
+  quizQuestions: defineTable({
+    questionId: v.number(),
+    question: v.string(),
+    options: v.array(v.string()),
+    answer: v.string(), // "A", "B", "C", "D"
+  }).index("by_questionId", ["questionId"]),
 });

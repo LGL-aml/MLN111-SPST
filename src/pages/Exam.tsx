@@ -1,258 +1,102 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
-interface Question {
-  id: number;
-  text: string;
-  options: { A: string; B: string; C: string; D: string };
-  correct: 'A' | 'B' | 'C' | 'D';
+type AnswerLetter = 'A' | 'B' | 'C' | 'D';
+const LETTERS = ['A', 'B', 'C', 'D'] as const;
+
+const EXAM_COUNT = 60;
+const EXAM_DURATION = 60 * 60; // 60 minutes in seconds
+
+interface ExamQuestion {
+  _id: string;
+  questionId: number;
+  question: string;
+  options: string[];
+  answer: AnswerLetter;
 }
 
-const EXAM_QUESTIONS: Question[] = [
-  {
-    id: 1,
-    text: 'Từ thế kỷ VIII trước công nguyên với nhà nước đầu tiên trong lịch sử, giai cấp tư hữu đã dùng pháp luật và bộ máy thống trị của mình để chiếm đoạt quyền lực của đông đảo quần chúng nhân dân lao động là những .....',
-    options: { A: 'nông dân.', B: 'người tự do.', C: 'người nô lệ.', D: 'nông nô.' },
-    correct: 'C',
-  },
-  {
-    id: 2,
-    text: 'C. Mác khẳng định: "Bản chất con người là tổng hòa những ..." gì?',
-    options: {
-      A: 'quan hệ xã hội.',
-      B: 'quan hệ kinh tế.',
-      C: 'quan hệ giai cấp.',
-      D: 'quan hệ sản xuất.',
-    },
-    correct: 'A',
-  },
-  {
-    id: 3,
-    text: 'Trong triết học Mác-Lênin, yếu tố nào giữ vai trò quyết định trong sự thống nhất bản chất con người?',
-    options: {
-      A: 'Yếu tố sinh học.',
-      B: 'Yếu tố xã hội.',
-      C: 'Yếu tố văn hóa.',
-      D: 'Yếu tố di truyền.',
-    },
-    correct: 'B',
-  },
-  {
-    id: 4,
-    text: 'Theo triết học Mác-Lênin, con người vừa là sản phẩm của lịch sử, vừa là:',
-    options: {
-      A: 'nạn nhân của các điều kiện xã hội.',
-      B: 'người quan sát trung lập của lịch sử.',
-      C: 'công cụ của các quy luật tự nhiên.',
-      D: 'chủ thể sáng tạo ra lịch sử thông qua hoạt động thực tiễn.',
-    },
-    correct: 'D',
-  },
-  {
-    id: 5,
-    text: '"Tha hóa" (Entfremdung) theo Mác là hiện tượng gì?',
-    options: {
-      A: 'Con người đạt được sự giải phóng hoàn toàn về tinh thần.',
-      B: 'Con người mất dần ý thức và quyền làm chủ bản thân trong lao động và đời sống xã hội.',
-      C: 'Con người hòa nhập hoàn toàn với cộng đồng xã hội.',
-      D: 'Con người phát triển toàn diện về thể chất và trí tuệ.',
-    },
-    correct: 'B',
-  },
-  {
-    id: 6,
-    text: 'Đặc điểm nào sau đây KHÔNG phải là đặc điểm của tha hóa theo Mác?',
-    options: {
-      A: 'Tính tự do.',
-      B: 'Tính khách quan.',
-      C: 'Tính lịch sử.',
-      D: 'Tính đối lập.',
-    },
-    correct: 'A',
-  },
-  {
-    id: 7,
-    text: 'Nguyên nhân sâu xa của hiện tượng tha hóa theo triết học Mác là:',
-    options: {
-      A: 'Sự phát triển của công nghệ hiện đại.',
-      B: 'Thiếu giáo dục và văn hóa trong xã hội.',
-      C: 'Chế độ tư hữu về tư liệu sản xuất.',
-      D: 'Sự lười biếng và thiếu ý chí của người lao động.',
-    },
-    correct: 'C',
-  },
-  {
-    id: 8,
-    text: 'Trong biểu hiện tha hóa về hoạt động lao động, lao động mang tính chất gì?',
-    options: {
-      A: 'Tự nguyện, sáng tạo và mang lại niềm vui.',
-      B: 'Cưỡng bức, thụ động để bảo đảm sinh tồn.',
-      C: 'Tự do và không bị ràng buộc.',
-      D: 'Mang tính cộng đồng và chia sẻ.',
-    },
-    correct: 'B',
-  },
-  {
-    id: 9,
-    text: 'Theo Mác, trong xã hội tư bản, sản phẩm do người lao động tạo ra trở thành:',
-    options: {
-      A: 'lực lượng đối lập, thống trị người tạo ra nó.',
-      B: 'tài sản chung của toàn xã hội.',
-      C: 'phần thưởng xứng đáng cho người lao động.',
-      D: 'biểu hiện của tự do sáng tạo.',
-    },
-    correct: 'A',
-  },
-  {
-    id: 10,
-    text: 'Mâu thuẫn nào là nguồn gốc chính của tha hóa theo triết học Mác?',
-    options: {
-      A: 'Mâu thuẫn giữa giai cấp nông dân và địa chủ.',
-      B: 'Mâu thuẫn giữa tôn giáo và khoa học.',
-      C: 'Mâu thuẫn giữa thành thị và nông thôn.',
-      D: 'Mâu thuẫn giữa tính chất xã hội của sản xuất và sự chiếm hữu tư nhân.',
-    },
-    correct: 'D',
-  },
-  {
-    id: 11,
-    text: 'Trong biểu hiện tha hóa về bản chất con người, quan hệ giữa người với người bị "hoán đổi" thành quan hệ nào?',
-    options: {
-      A: 'Quan hệ hợp tác bình đẳng và tương trợ.',
-      B: 'Quan hệ giữa người và vật (tiền lương, hàng hóa).',
-      C: 'Quan hệ văn hóa và tinh thần.',
-      D: 'Quan hệ cộng đồng và đoàn kết.',
-    },
-    correct: 'B',
-  },
-  {
-    id: 12,
-    text: 'Theo Mác, giải phóng con người là quá trình chuyển từ đâu sang đâu?',
-    options: {
-      A: 'Từ "vương quốc tự do" sang "vương quốc tất yếu".',
-      B: 'Từ "xã hội nguyên thủy" sang "xã hội hiện đại".',
-      C: 'Từ "vương quốc tất yếu" sang "vương quốc tự do".',
-      D: 'Từ "xã hội nông nghiệp" sang "xã hội công nghiệp".',
-    },
-    correct: 'C',
-  },
-  {
-    id: 13,
-    text: 'Nền tảng kinh tế của giải phóng con người theo triết học Mác là:',
-    options: {
-      A: 'Phát triển mạnh mẽ khoa học và công nghệ.',
-      B: 'Cải thiện điều kiện lao động cho công nhân.',
-      C: 'Tăng cường sản xuất hàng hóa và thương mại.',
-      D: 'Xóa bỏ chế độ tư hữu tư bản chủ nghĩa, thiết lập chế độ công hữu.',
-    },
-    correct: 'D',
-  },
-  {
-    id: 14,
-    text: 'Giải phóng chính trị theo Mác-Lênin là:',
-    options: {
-      A: 'Thiết lập nền dân chủ xã hội chủ nghĩa, quyền lực thuộc về nhân dân.',
-      B: 'Tăng cường quyền lực của nhà nước để bảo vệ trật tự xã hội.',
-      C: 'Xóa bỏ hoàn toàn mọi hình thức nhà nước.',
-      D: 'Thành lập chính phủ đa đảng theo mô hình phương Tây.',
-    },
-    correct: 'A',
-  },
-  {
-    id: 15,
-    text: 'Giai cấp nào được Mác-Lênin xem là lực lượng kiên quyết và triệt để nhất có sứ mệnh giải phóng nhân loại?',
-    options: {
-      A: 'Giai cấp nông dân.',
-      B: 'Tầng lớp trí thức.',
-      C: 'Giai cấp tư sản tiến bộ.',
-      D: 'Giai cấp công nhân.',
-    },
-    correct: 'D',
-  },
-  {
-    id: 16,
-    text: 'Đảng Cộng sản trong triết học Mác-Lênin được xác định là:',
-    options: {
-      A: 'Tổ chức đại diện cho lợi ích của giai cấp tư sản.',
-      B: 'Đội tham mưu trang bị lý luận khoa học cho giai cấp công nhân.',
-      C: 'Cơ quan trung gian hòa giải các xung đột giai cấp.',
-      D: 'Tổ chức quản lý kinh tế nhà nước.',
-    },
-    correct: 'B',
-  },
-  {
-    id: 17,
-    text: 'Theo Mác, mối quan hệ giữa "lao động tha hóa" và "tư hữu" là:',
-    options: {
-      A: 'Quan hệ một chiều: tư hữu sinh ra lao động tha hóa.',
-      B: 'Không có mối quan hệ với nhau.',
-      C: 'Quan hệ biện chứng: lao động tha hóa tạo ra tư hữu và tư hữu lại làm sâu sắc thêm tha hóa.',
-      D: 'Quan hệ một chiều: lao động tha hóa sinh ra tư hữu, tư hữu không tác động ngược lại.',
-    },
-    correct: 'C',
-  },
-  {
-    id: 18,
-    text: 'Trong xã hội hiện đại, hiện tượng nào sau đây được xem là biểu hiện của tha hóa theo triết học Mác?',
-    options: {
-      A: 'Sự gia tăng thu nhập và mức sống của người lao động.',
-      B: 'Sự phát triển mạnh mẽ của các mô hình hợp tác xã.',
-      C: 'Hiện tượng "burnout" ở nhân viên văn phòng và tăng ca quá mức ở công nhân.',
-      D: 'Sự mở rộng quyền của người lao động trong doanh nghiệp.',
-    },
-    correct: 'C',
-  },
-  {
-    id: 19,
-    text: 'Mục tiêu toàn diện của giải phóng con người theo Mác là:',
-    options: {
-      A: '"Sự phát triển tự do của mỗi người là điều kiện cho sự phát triển tự do của tất cả mọi người."',
-      B: 'Đảm bảo mức sống vật chất tối thiểu cho tất cả mọi người.',
-      C: 'Xây dựng xã hội không có bất kỳ hình thức phân công lao động nào.',
-      D: 'Phát triển kinh tế thị trường tự do và cạnh tranh lành mạnh.',
-    },
-    correct: 'A',
-  },
-  {
-    id: 20,
-    text: 'Giải phóng xã hội theo Mác-Lênin là:',
-    options: {
-      A: 'Tăng cường sản xuất và tiêu dùng hàng hóa.',
-      B: 'Phát triển hệ thống phúc lợi xã hội của nhà nước tư bản.',
-      C: 'Xóa bỏ mọi phân biệt đối xử, xây dựng quan hệ bình đẳng, tương trợ giữa người với người.',
-      D: 'Thiết lập trật tự xã hội nghiêm ngặt theo quy luật tự nhiên.',
-    },
-    correct: 'C',
-  },
-];
-
-const EXAM_DURATION = 15 * 60; // 15 minutes in seconds
-const TOTAL = EXAM_QUESTIONS.length;
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function Exam() {
   const navigate = useNavigate();
+  const rawQuestions = useQuery(api.questions.list);
+  const seedMutation = useMutation(api.questions.seed);
+
+  const seeded = useRef(false);
+  const picked = useRef(false);
+
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerLetter>>({});
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
   const [wantToFinish, setWantToFinish] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (rawQuestions === undefined) return;
+    if (seeded.current) return;
+    seeded.current = true;
+
+    if (rawQuestions.length === 0) {
+      seedMutation({}).catch(err => {
+        console.error('Failed to seed quizQuestions:', err);
+      });
+    }
+  }, [rawQuestions, seedMutation]);
+
+  useEffect(() => {
+    if (!rawQuestions || rawQuestions.length === 0) return;
+    if (picked.current) return;
+    picked.current = true;
+
+    const normalized: ExamQuestion[] = rawQuestions.map(q => ({
+      _id: q._id,
+      questionId: q.questionId,
+      question: q.question,
+      options: q.options,
+      answer: q.answer as AnswerLetter,
+    }));
+
+    const pool = shuffle(normalized);
+    const selected = pool.slice(0, Math.min(EXAM_COUNT, pool.length));
+
+    setQuestions(selected);
+    setCurrentIndex(0);
+    setAnswers({});
+    setWantToFinish(false);
+    setSubmitted(false);
+    setTimeLeft(EXAM_DURATION);
+  }, [rawQuestions]);
+
+  useEffect(() => {
+    if (questions.length === 0) return;
+    if (submitted) return;
+
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!);
+          if (timerRef.current) clearInterval(timerRef.current);
           setSubmitted(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [questions.length, submitted]);
 
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -261,24 +105,66 @@ export default function Exam() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const currentQ = EXAM_QUESTIONS[currentIndex];
+  const total = questions.length;
   const answeredCount = Object.keys(answers).length;
-  const progressPct = (answeredCount / TOTAL) * 100;
+  const progressPct = total > 0 ? (answeredCount / total) * 100 : 0;
 
-  const handleSelect = (opt: 'A' | 'B' | 'C' | 'D') => {
-    setAnswers(prev => ({ ...prev, [currentQ.id]: opt }));
+  const currentQ = questions[currentIndex];
+
+  const handleSelect = (opt: AnswerLetter) => {
+    if (!currentQ) return;
+    setAnswers(prev => ({ ...prev, [currentQ._id]: opt }));
   };
 
   const handleSubmit = () => {
     if (!wantToFinish) return;
+    if (questions.length === 0) return;
     if (timerRef.current) clearInterval(timerRef.current);
     setSubmitted(true);
   };
 
+  if (rawQuestions === undefined || questions.length === 0 || !currentQ) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: '#f0f0f0',
+          color: '#111',
+          colorScheme: 'light',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Arial, sans-serif',
+          padding: '24px',
+        }}
+      >
+        <div style={{ textAlign: 'center', maxWidth: '520px' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Đang tải đề thi…</div>
+          <div style={{ fontSize: '13px', color: '#666', marginBottom: '14px' }}>
+            Hệ thống đang lấy {EXAM_COUNT} câu hỏi ngẫu nhiên từ ngân hàng câu hỏi.
+          </div>
+          <button
+            onClick={() => navigate('/quiz')}
+            style={{
+              backgroundColor: '#fff',
+              border: '1px solid #ccc',
+              padding: '6px 18px',
+              cursor: 'pointer',
+              fontSize: '12px',
+            }}
+          >
+            Exit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   /* ─── Results screen ─── */
   if (submitted) {
-    const correctCount = EXAM_QUESTIONS.filter(q => answers[q.id] === q.correct).length;
-    const score = parseFloat(((correctCount / TOTAL) * 10).toFixed(1));
+    const correctCount = questions.filter(q => answers[q._id] === q.answer).length;
+    const score = parseFloat(((correctCount / Math.max(1, total)) * 10).toFixed(1));
     const passed = score >= 5;
 
     return (
@@ -339,9 +225,9 @@ export default function Exam() {
           >
             {[
               { value: score.toFixed(1), label: 'Điểm số / 10', color: passed ? '#28a745' : '#dc3545' },
-              { value: `${correctCount}/${TOTAL}`, label: 'Câu đúng', color: '#28a745' },
-              { value: `${TOTAL - correctCount}/${TOTAL}`, label: 'Câu sai', color: '#dc3545' },
-              { value: `${TOTAL - answeredCount}`, label: 'Bỏ qua', color: '#999' },
+              { value: `${correctCount}/${total}`, label: 'Câu đúng', color: '#28a745' },
+              { value: `${total - correctCount}/${total}`, label: 'Câu sai', color: '#dc3545' },
+              { value: `${total - answeredCount}`, label: 'Bỏ qua', color: '#999' },
             ].map(({ value, label, color }) => (
               <div key={label} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '44px', fontWeight: 'bold', color }}>{value}</div>
@@ -374,15 +260,15 @@ export default function Exam() {
                 </tr>
               </thead>
               <tbody>
-                {EXAM_QUESTIONS.map((q, i) => {
-                  const userAns = answers[q.id];
-                  const isCorrect = userAns === q.correct;
+                {questions.map((q, i) => {
+                  const userAns = answers[q._id];
+                  const isCorrect = userAns === q.answer;
                   const rowBg = !userAns ? '#fffbe6' : isCorrect ? '#f0fff0' : '#fff0f0';
                   return (
-                    <tr key={q.id} style={{ backgroundColor: rowBg }}>
+                    <tr key={q._id} style={{ backgroundColor: rowBg }}>
                       <td style={{ border: '1px solid #ddd', padding: '7px 10px', textAlign: 'center' }}>{i + 1}</td>
                       <td style={{ border: '1px solid #ddd', padding: '7px 10px', lineHeight: '1.45' }}>
-                        {q.text.length > 90 ? q.text.slice(0, 90) + '…' : q.text}
+                        {q.question.length > 90 ? q.question.slice(0, 90) + '…' : q.question}
                       </td>
                       <td
                         style={{
@@ -404,7 +290,7 @@ export default function Exam() {
                           color: '#28a745',
                         }}
                       >
-                        {q.correct}
+                        {q.answer}
                       </td>
                       <td style={{ border: '1px solid #ddd', padding: '7px 10px', textAlign: 'center', fontSize: '16px' }}>
                         {!userAns ? '○' : isCorrect ? '✓' : '✗'}
@@ -532,14 +418,14 @@ export default function Exam() {
               Answer
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingLeft: '10px' }}>
-              {(['A', 'B', 'C', 'D'] as const).map(opt => (
+              {LETTERS.map(opt => (
                 <label
                   key={opt}
                   style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}
                 >
                   <input
                     type="checkbox"
-                    checked={answers[currentQ.id] === opt}
+                    checked={answers[currentQ._id] === opt}
                     onChange={() => handleSelect(opt)}
                     style={{ cursor: 'pointer' }}
                   />
@@ -563,15 +449,15 @@ export default function Exam() {
                 Back
               </button>
               <button
-                onClick={() => setCurrentIndex(i => Math.min(TOTAL - 1, i + 1))}
-                disabled={currentIndex === TOTAL - 1}
+                onClick={() => setCurrentIndex(i => Math.min(total - 1, i + 1))}
+                disabled={currentIndex === total - 1}
                 style={{
                   padding: '3px 8px',
                   border: '1px solid #999',
                   backgroundColor: '#fff',
-                  cursor: currentIndex === TOTAL - 1 ? 'default' : 'pointer',
+                  cursor: currentIndex === total - 1 ? 'default' : 'pointer',
                   fontSize: '12px',
-                  opacity: currentIndex === TOTAL - 1 ? 0.45 : 1,
+                  opacity: currentIndex === total - 1 ? 0.45 : 1,
                 }}
               >
                 Next
@@ -590,10 +476,10 @@ export default function Exam() {
           >
             <div style={{ marginBottom: '10px', color: '#555' }}>(Chọn 1 đáp án)</div>
             <div style={{ fontSize: '13px', color: '#333', marginBottom: '4px' }}>
-              Câu {currentIndex + 1} / {TOTAL}
+              Câu {currentIndex + 1} / {total}
             </div>
             <div style={{ fontSize: '12px', color: '#777' }}>
-              Đã trả lời: {answeredCount} / {TOTAL}
+              Đã trả lời: {answeredCount} / {total}
             </div>
           </div>
 
@@ -610,10 +496,10 @@ export default function Exam() {
               overflowY: 'auto',
             }}
           >
-            <p style={{ marginBottom: '16px', fontWeight: 500 }}>{currentQ.text}</p>
-            {(['A', 'B', 'C', 'D'] as const).map(opt => (
+            <p style={{ marginBottom: '16px', fontWeight: 500 }}>{currentQ.question}</p>
+            {LETTERS.map((opt, idx) => (
               <p key={opt} style={{ marginBottom: '8px' }}>
-                {opt}. {currentQ.options[opt]}
+                {currentQ.options[idx] ?? `${opt}.`}
               </p>
             ))}
           </div>

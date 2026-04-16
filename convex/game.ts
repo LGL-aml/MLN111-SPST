@@ -144,12 +144,13 @@ async function processRound(ctx: MutationCtx, roomId: Id<"rooms">) {
     }
   }
 
-  // Check if any players are still alive
+  // Check if any (non-host) players are still alive
+  // NOTE: The host is a moderator and should not keep the game running.
   const finalPlayers = await ctx.db
     .query("players")
     .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
     .take(50);
-  const anyAlive = finalPlayers.some((p) => p.isAlive);
+  const anyAlive = finalPlayers.some((p) => p.isAlive && !p.isHost);
 
   if (!anyAlive) {
     await ctx.db.patch(roomId, {
@@ -190,6 +191,18 @@ export const nextRound = mutation({
         currentChoice: null,
         hasSubmitted: false,
       });
+    }
+
+    // If all non-host players are dead, end the game immediately.
+    // This prevents the host UI from getting stuck at (0/0) submissions.
+    const anyAlive = players.some((p) => p.isAlive && !p.isHost);
+    if (!anyAlive) {
+      await ctx.db.patch(args.roomId, {
+        status: "finished",
+        phase: "results",
+        randomEvent: null,
+      });
+      return;
     }
 
     if (room.currentRound >= 5) {

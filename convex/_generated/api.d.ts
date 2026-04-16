@@ -12,6 +12,8 @@ import type * as chat from "../chat.js";
 import type * as game from "../game.js";
 import type * as gameData from "../gameData.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
+import type * as questions from "../questions.js";
+import type * as questionsData from "../questionsData.js";
 import type * as rooms from "../rooms.js";
 import type * as seed from "../seed.js";
 
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   game: typeof game;
   gameData: typeof gameData;
   knowledgeBase: typeof knowledgeBase;
+  questions: typeof questions;
+  questionsData: typeof questionsData;
   rooms: typeof rooms;
   seed: typeof seed;
 }>;
