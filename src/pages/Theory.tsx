@@ -8,7 +8,6 @@ const SECTIONS = [
   { id: 's1', title: 'Khái niệm con người', icon: User },
   { id: 's2', title: 'Tha hóa là gì?', icon: LinkIcon },
   { id: 's3', title: 'Biểu hiện tha hóa', icon: Settings },
-  { id: 's4', title: 'So sánh quan niệm', icon: Scale },
   { id: 's5', title: 'Giải phóng con người', icon: AlignLeft },
   { id: 's6', title: 'Thực tiễn hiện đại', icon: Globe },
 ];
@@ -332,46 +331,7 @@ export default function Theory() {
           </div>
         </motion.section>
 
-        {/* Section 4: So sánh */}
-        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s4" className="scroll-mt-28 space-y-6">
-          <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm overflow-hidden hover:border-blue-500/30 transition-colors">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                <Scale className="w-5 h-5" />
-              </div>
-              <h2 className="text-2xl font-bold text-on-surface">So sánh quan niệm về con người</h2>
-            </div>
-            
-            <div className="overflow-x-auto rounded-xl border border-outline-variant/50">
-              <table className="w-full text-base text-left border-collapse">
-                <thead className="bg-surface-variant/30 border-b-2 border-outline-variant">
-                  <tr>
-                    <th className="px-5 py-4 font-semibold text-on-surface w-1/4">Tiêu chí</th>
-                    <th className="px-5 py-4 font-semibold text-outline-variant w-[37.5%]">Các nhà tư tưởng trước Mác</th>
-                    <th className="px-5 py-4 font-semibold text-primary w-[37.5%]">Triết học Mác–Lênin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/30">
-                  <tr className="hover:bg-surface-variant/50 transition-colors">
-                    <td className="px-5 py-4 font-semibold text-on-surface">Nguồn gốc</td>
-                    <td className="px-5 py-4 text-on-surface-variant">Do đấng sáng tạo hoặc tự nhiên ban tặng sẵn có</td>
-                    <td className="px-5 py-4 text-on-surface font-medium bg-primary/5">Sản phẩm của lịch sử và hoạt động thực tiễn</td>
-                  </tr>
-                  <tr className="hover:bg-surface-variant/50 transition-colors">
-                    <td className="px-5 py-4 font-semibold text-on-surface">Bản chất</td>
-                    <td className="px-5 py-4 text-on-surface-variant">Trừu tượng, vĩnh cửu, nằm bên trong mỗi cá nhân</td>
-                    <td className="px-5 py-4 text-on-surface font-medium bg-primary/5">Tổng hòa các quan hệ xã hội hiện thực, biến đổi</td>
-                  </tr>
-                  <tr className="hover:bg-surface-variant/50 transition-colors">
-                    <td className="px-5 py-4 font-semibold text-on-surface">Vai trò</td>
-                    <td className="px-5 py-4 text-on-surface-variant">Sản phẩm thụ động của hoàn cảnh</td>
-                    <td className="px-5 py-4 text-on-surface font-medium bg-primary/5">Chủ thể sáng tạo, vừa là sản phẩm vừa là chủ nhân</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.section>
+        
 
         {/* Section 5: Giải phóng */}
         <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s5" className="scroll-mt-28 space-y-6">
@@ -435,6 +395,52 @@ export default function Theory() {
                 <h4 className="font-bold text-primary mb-1 text-base uppercase tracking-wider">Đích cuối: Giải phóng toàn diện</h4>
                 <p className="text-base text-on-surface-variant leading-relaxed">Phát triển con người cả về thể chất, trí tuệ, đạo đức. Đủ thời gian học tập, sáng tạo, tự do lựa chọn nghề nghiệp phát huy tối đa năng lực cá nhân.</p>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <h3 className="font-bold text-on-surface mb-4 border-b border-outline-variant pb-3">Lực lượng và con đường giải phóng</h3>
+            <p className="text-base text-on-surface-variant leading-relaxed mb-6">
+              Quá trình giải phóng không diễn ra tự phát mà cần có lực lượng tiên phong và phương pháp khoa học.
+            </p>
+
+            <div className="space-y-5">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-on-surface">Giai cấp công nhân</h4>
+                  <p className="text-base text-on-surface-variant leading-relaxed">
+                    Là giai cấp có sứ mệnh lịch sử giải phóng mình và giải phóng toàn nhân loại khỏi mọi sự áp bức. Do vị trí trong nền sản xuất hiện đại, giai cấp công nhân là lực lượng kiên quyết và triệt để nhất trong cuộc đấu tranh này.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-on-surface">Quần chúng nhân dân</h4>
+                  <p className="text-base text-on-surface-variant leading-relaxed">
+                    Là lực lượng thực hiện trực tiếp công cuộc cải tạo xã hội. Sự giải phóng con người là sự nghiệp của chính quần chúng nhân dân dưới sự lãnh đạo của giai cấp công nhân.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-on-surface">Vai trò của Đảng Cộng sản</h4>
+                  <p className="text-base text-on-surface-variant leading-relaxed">
+                    Đảng là đội tham mưu chiến đấu, trang bị lý luận khoa học cho giai cấp công nhân, tổ chức và lãnh đạo phong trào cách mạng đi đúng hướng. Không có Đảng, giai cấp công nhân không thể giành và giữ được chính quyền.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <h4 className="font-semibold text-on-surface mb-2">Con đường giải phóng</h4>
+              <p className="text-base text-on-surface-variant leading-relaxed">
+                Thông qua cách mạng xã hội nhằm xóa bỏ chế độ tư hữu, giành chính quyền về tay nhân dân, xây dựng chủ nghĩa xã hội và tiến tới chủ nghĩa cộng sản. Đây là con đường từ tự phát đến tự giác, từ đấu tranh kinh tế đến đấu tranh chính trị và cải tạo xã hội toàn diện.
+              </p>
             </div>
           </div>
         </motion.section>
