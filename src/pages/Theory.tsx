@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Link as LinkIcon, Settings, AlignLeft, Scale, Globe, CheckCircle, ChevronDown } from 'lucide-react';
+import { User, Link as LinkIcon, Settings, AlignLeft, Lightbulb, Globe, CheckCircle, ChevronDown } from 'lucide-react';
 
 import angghenImg from '../public/angghen.png';
 
@@ -8,6 +8,7 @@ const SECTIONS = [
   { id: 's1', title: 'Khái niệm con người', icon: User },
   { id: 's2', title: 'Tha hóa là gì?', icon: LinkIcon },
   { id: 's3', title: 'Biểu hiện tha hóa', icon: Settings },
+  { id: 's4', title: 'Nguyên nhân tha hóa', icon: Lightbulb },
   { id: 's5', title: 'Giải phóng con người', icon: AlignLeft },
   { id: 's6', title: 'Thực tiễn hiện đại', icon: Globe },
 ];
@@ -331,7 +332,49 @@ export default function Theory() {
           </div>
         </motion.section>
 
-        
+        {/* Section 4: Nguyên nhân tha hóa */}
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }}
+          id="s4"
+          className="scroll-mt-28 space-y-6"
+        >
+          <h2 className="text-3xl font-headline font-bold text-on-surface mb-6 px-1 border-l-4 border-blue-500 pl-3">
+            4 Nguyên nhân của tha hóa
+          </h2>
+
+          <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:-translate-y-1 transition-transform duration-300">
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-on-surface">Nguyên nhân sâu xa</h3>
+                <p className="text-base text-outline mt-1">Từ chế độ tư hữu đến mâu thuẫn của sản xuất tư bản chủ nghĩa</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-base text-on-surface-variant leading-relaxed">
+                Nguyên nhân sâu xa của hiện tượng tha hóa nằm ở chế độ tư hữu về tư liệu sản xuất. Trong chủ nghĩa tư bản, mặc dù lao động mang tính xã hội hóa cao, nhưng kết quả lao động lại bị chiếm hữu một cách tư nhân. Mâu thuẫn giữa tính chất xã hội của sản xuất và hình thức chiếm hữu tư nhân chính là nguồn gốc của tha hóa.
+              </p>
+              <p className="text-base text-on-surface-variant leading-relaxed">
+                Mác chỉ ra rằng tư hữu không chỉ là kết quả của lao động bị tha hóa mà còn là nguyên nhân duy trì và phát triển tình trạng tha hóa. Đây là một mối quan hệ mang tính biện chứng: lao động bị tha hóa tạo ra tư hữu, và tư hữu lại tiếp tục làm sâu sắc thêm sự tha hóa.
+              </p>
+              <p className="text-base text-on-surface-variant leading-relaxed">
+                Về bản chất, tha hóa là hiện tượng mang tính lịch sử, gắn với các hình thái kinh tế – xã hội có giai cấp. Nó không phải là hiện tượng vĩnh viễn, mà có thể bị xóa bỏ khi những điều kiện kinh tế – xã hội thay đổi, đặc biệt là khi chế độ tư hữu bị thay thế.
+              </p>
+            </div>
+
+            <div className="mt-6 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <p className="text-base text-on-surface-variant leading-relaxed">
+                <strong className="text-on-surface">Kết luận:</strong> Tha hóa gắn với tư hữu và phân công lao động.
+              </p>
+            </div>
+          </div>
+        </motion.section>
 
         {/* Section 5: Giải phóng */}
         <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s5" className="scroll-mt-28 space-y-6">
