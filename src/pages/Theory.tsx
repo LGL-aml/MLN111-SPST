@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Link as LinkIcon, Settings, AlignLeft, Lightbulb, Globe, CheckCircle, ChevronDown } from 'lucide-react';
+import { User, Link as LinkIcon, Settings, AlignLeft, Lightbulb, Globe, CheckCircle, ChevronDown, Scale } from 'lucide-react';
 
 import angghenImg from '../public/angghen.png';
 
@@ -230,23 +230,30 @@ export default function Theory() {
           <div>
             <h3 className="font-bold text-on-surface mb-4 px-1">Bốn đặc điểm cơ bản</h3>
             <Accordion number={1} title="Tính khách quan" defaultOpen={true}>
-              Không phụ thuộc vào mong muốn cá nhân, mà do các điều kiện kinh tế–xã hội quy định. Tha hóa là tất yếu trong chế độ tư hữu tư liệu sản xuất.
+                <div className="flex items-center gap-2 mb-2"><span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-red-500/10 text-red-600 dark:text-red-400"><Settings className="w-4 h-4" /></span><span className="font-semibold">Tính khách quan</span></div>
+                Không phụ thuộc vào mong muốn cá nhân, mà do các điều kiện kinh tế–xã hội quy định. Tha hóa là tất yếu trong chế độ tư hữu tư liệu sản xuất.
             </Accordion>
             <Accordion number={2} title="Tính lịch sử">
-              Tha hóa không tồn tại vĩnh viễn. Nó ra đời cùng chế độ tư hữu và sẽ mất đi khi các điều kiện đó bị xóa bỏ. Đây là hiện tượng mang tính lịch sử, gắn với hình thái kinh tế–xã hội có giai cấp.
+                <div className="flex items-center gap-2 mb-2"><span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400"><Globe className="w-4 h-4" /></span><span className="font-semibold">Tính lịch sử</span></div>
+                Tha hóa không tồn tại vĩnh viễn. Nó ra đời cùng chế độ tư hữu và sẽ mất đi khi các điều kiện đó bị xóa bỏ. Đây là hiện tượng mang tính lịch sử, gắn với hình thái kinh tế–xã hội có giai cấp.
             </Accordion>
             <Accordion number={3} title="Tính đối lập">
-              Sản phẩm lao động biến thành thế lực thù địch, nô dịch chính người sáng tạo ra nó. Điều con người tạo ra quay lại thống trị, kiểm soát con người.
+                <div className="flex items-center gap-2 mb-2"><span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400"><Scale className="w-4 h-4" /></span><span className="font-semibold">Tính đối lập</span></div>
+                Sản phẩm lao động biến thành thế lực thù địch, nô dịch chính người sáng tạo ra nó. Điều con người tạo ra quay lại thống trị, kiểm soát con người.
             </Accordion>
             <Accordion number={4} title="Tính phổ biến">
-              Trong xã hội tư bản, tha hóa không chỉ ảnh hưởng đến công nhân mà còn đến cả nhà tư bản, mặc dù ở các mức độ và trạng thái khác nhau.
+                <div className="flex items-center gap-2 mb-2"><span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-green-500/10 text-green-600 dark:text-green-400"><User className="w-4 h-4" /></span><span className="font-semibold">Tính phổ biến</span></div>
+                Trong xã hội tư bản, tha hóa không chỉ ảnh hưởng đến công nhân mà còn đến cả nhà tư bản, mặc dù ở các mức độ và trạng thái khác nhau.
             </Accordion>
           </div>
         </motion.section>
 
         {/* Section 3: Biểu hiện tha hóa */}
         <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, type: 'spring', bounce: 0.2 }} id="s3" className="scroll-mt-28 space-y-6">
-          <h2 className="text-3xl font-headline font-bold text-on-surface mb-6 px-1 border-l-4 border-amber-500 pl-3">3 Biểu hiện của tha hóa</h2>
+          <h2 className="text-3xl font-headline font-bold text-on-surface mb-6 px-1 border-l-4 border-amber-500 pl-3">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-red-500/10 text-red-600 mr-2 align-middle"><Settings className="w-5 h-5" /></span>
+            Biểu hiện của tha hóa
+          </h2>
           
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:-translate-y-1 transition-transform duration-300">
             <div className="flex flex-wrap gap-2 mb-4">
@@ -333,6 +340,7 @@ export default function Theory() {
         </motion.section>
 
         {/* Section 4: Nguyên nhân tha hóa */}
+
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -342,7 +350,8 @@ export default function Theory() {
           className="scroll-mt-28 space-y-6"
         >
           <h2 className="text-3xl font-headline font-bold text-on-surface mb-6 px-1 border-l-4 border-blue-500 pl-3">
-            4 Nguyên nhân của tha hóa
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-500/10 text-blue-600 mr-2 align-middle"><Lightbulb className="w-5 h-5" /></span>
+            Nguyên nhân của tha hóa
           </h2>
 
           <div className="bg-surface border border-outline-variant rounded-2xl p-6 shadow-sm hover:-translate-y-1 transition-transform duration-300">
