@@ -1,10 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
-type AnswerLetter = 'A' | 'B' | 'C' | 'D';
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
+/** Derive ['A','B','C',...] from the question's options array length */
+function optionLetters(count: number): string[] {
+  return Array.from({ length: count }, (_, i) => String.fromCharCode(65 + i));
+}
+
+/** True only when the selected set exactly matches the correct answer set */
+function isAnswerCorrect(correct: string[], selected: string[]): boolean {
+  if (selected.length === 0 || selected.length !== correct.length) return false;
+  const s = [...selected].sort();
+  const c = [...correct].sort();
+  return s.every((v, i) => v === c[i]);
+}
 
 const EXAM_COUNT = 60;
 const EXAM_DURATION = 60 * 60; // 60 minutes in seconds
@@ -14,7 +24,8 @@ interface ExamQuestion {
   questionId: number;
   question: string;
   options: string[];
-  answer: AnswerLetter;
+  /** Always an array — single-answer = ["A"], multi-answer = ["C","D"] */
+  answer: string[];
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -28,33 +39,46 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function Exam() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Questions passed from Quiz modal via router state (RAM only – never stored)
+  const stateQs = (location.state as { questions?: ExamQuestion[] } | null)?.questions;
+  const hasStateQs = Array.isArray(stateQs) && stateQs.length > 0;
+
+  // Only hit Convex when no questions were passed via state
   const rawQuestions = useQuery(api.questions.list);
   const seedMutation = useMutation(api.questions.seed);
 
   const seeded = useRef(false);
-  const picked = useRef(false);
+  const picked = useRef(hasStateQs); // skip Convex pick when state already provides questions
 
-  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  // Initialise questions immediately from router state when available;
+  // otherwise start empty and wait for the Convex effect below.
+  const [questions, setQuestions] = useState<ExamQuestion[]>(() =>
+    hasStateQs ? stateQs! : [],
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, AnswerLetter>>({});
+  // selected letters per question; multi-answer questions can have several
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
   const [wantToFinish, setWantToFinish] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Seed Convex bank if needed (only when not using state questions)
   useEffect(() => {
+    if (hasStateQs) return;
     if (rawQuestions === undefined) return;
     if (seeded.current) return;
     seeded.current = true;
-
     if (rawQuestions.length === 0) {
-      seedMutation({}).catch(err => {
-        console.error('Failed to seed quizQuestions:', err);
-      });
+      seedMutation({}).catch(err => console.error('Failed to seed quizQuestions:', err));
     }
-  }, [rawQuestions, seedMutation]);
+  }, [rawQuestions, seedMutation, hasStateQs]);
 
+  // Pick questions from Convex bank (only when not using state questions)
   useEffect(() => {
+    if (hasStateQs) return;
     if (!rawQuestions || rawQuestions.length === 0) return;
     if (picked.current) return;
     picked.current = true;
@@ -64,7 +88,7 @@ export default function Exam() {
       questionId: q.questionId,
       question: q.question,
       options: q.options,
-      answer: q.answer as AnswerLetter,
+      answer: [q.answer], // Convex stores single string; wrap in array
     }));
 
     const pool = shuffle(normalized);
@@ -76,7 +100,7 @@ export default function Exam() {
     setWantToFinish(false);
     setSubmitted(false);
     setTimeLeft(EXAM_DURATION);
-  }, [rawQuestions]);
+  }, [rawQuestions, hasStateQs]);
 
   useEffect(() => {
     if (questions.length === 0) return;
@@ -105,14 +129,24 @@ export default function Exam() {
   };
 
   const total = questions.length;
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = Object.values(answers).filter(a => a.length > 0).length;
   const progressPct = total > 0 ? (answeredCount / total) * 100 : 0;
 
   const currentQ = questions[currentIndex];
 
-  const handleSelect = (opt: AnswerLetter) => {
+  const handleSelect = (opt: string) => {
     if (!currentQ) return;
-    setAnswers(prev => ({ ...prev, [currentQ._id]: opt }));
+    const isMulti = currentQ.answer.length > 1;
+    setAnswers(prev => {
+      const cur = prev[currentQ._id] ?? [];
+      if (isMulti) {
+        // toggle selection
+        const next = cur.includes(opt) ? cur.filter(a => a !== opt) : [...cur, opt];
+        return { ...prev, [currentQ._id]: next };
+      }
+      // single-answer: replace
+      return { ...prev, [currentQ._id]: [opt] };
+    });
   };
 
   const handleSubmit = () => {
@@ -122,7 +156,9 @@ export default function Exam() {
     setSubmitted(true);
   };
 
-  if (rawQuestions === undefined || questions.length === 0 || !currentQ) {
+  // Show loading only while waiting for Convex data (not needed for state questions)
+  if (questions.length === 0 || !currentQ) {
+    const isWaitingConvex = !hasStateQs && rawQuestions === undefined;
     return (
       <div
         style={{
@@ -139,9 +175,13 @@ export default function Exam() {
         }}
       >
         <div style={{ textAlign: 'center', maxWidth: '520px' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Đang tải đề thi…</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+            {isWaitingConvex ? 'Đang tải đề thi…' : 'Chuẩn bị bài thi…'}
+          </div>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '14px' }}>
-            Hệ thống đang lấy {EXAM_COUNT} câu hỏi ngẫu nhiên từ ngân hàng câu hỏi.
+            {isWaitingConvex
+              ? `Hệ thống đang lấy ${EXAM_COUNT} câu hỏi ngẫu nhiên từ ngân hàng câu hỏi.`
+              : 'Đang khởi tạo đề thi từ file đã import.'}
           </div>
           <button
             onClick={() => navigate('/quiz')}
@@ -162,7 +202,9 @@ export default function Exam() {
 
   /* ─── Results screen ─── */
   if (submitted) {
-    const correctCount = questions.filter(q => answers[q._id] === q.answer).length;
+    const correctCount = questions.filter(q =>
+      isAnswerCorrect(q.answer, answers[q._id] ?? []),
+    ).length;
     const score = parseFloat(((correctCount / Math.max(1, total)) * 10).toFixed(1));
     const passed = score >= 5;
 
@@ -206,7 +248,9 @@ export default function Exam() {
               {passed ? 'ĐẠT' : 'CHƯA ĐẠT'}
             </div>
             <div style={{ fontSize: '15px', opacity: 0.9 }}>
-              Kết quả bài thi Triết học Mác-Lênin (MLN111)
+              {hasStateQs && (location.state as any)?.source === 'import'
+                ? `Kết quả bài thi — ${(location.state as any)?.fileName ?? 'File import'}`
+                : 'Kết quả bài thi Triết học Mác-Lênin (MLN111)'}
             </div>
           </div>
 
@@ -260,9 +304,12 @@ export default function Exam() {
               </thead>
               <tbody>
                 {questions.map((q, i) => {
-                  const userAns = answers[q._id];
-                  const isCorrect = userAns === q.answer;
-                  const rowBg = !userAns ? '#fffbe6' : isCorrect ? '#f0fff0' : '#fff0f0';
+                  const sel = answers[q._id] ?? [];
+                  const hasAns = sel.length > 0;
+                  const correct = isAnswerCorrect(q.answer, sel);
+                  const rowBg = !hasAns ? '#fffbe6' : correct ? '#f0fff0' : '#fff0f0';
+                  const userDisplay = hasAns ? [...sel].sort().join(', ') : '—';
+                  const correctDisplay = [...q.answer].sort().join(', ');
                   return (
                     <tr key={q._id} style={{ backgroundColor: rowBg }}>
                       <td style={{ border: '1px solid #ddd', padding: '7px 10px', textAlign: 'center' }}>{i + 1}</td>
@@ -275,10 +322,10 @@ export default function Exam() {
                           padding: '7px 10px',
                           textAlign: 'center',
                           fontWeight: 'bold',
-                          color: !userAns ? '#aaa' : isCorrect ? '#28a745' : '#dc3545',
+                          color: !hasAns ? '#aaa' : correct ? '#28a745' : '#dc3545',
                         }}
                       >
-                        {userAns ?? '—'}
+                        {userDisplay}
                       </td>
                       <td
                         style={{
@@ -289,10 +336,10 @@ export default function Exam() {
                           color: '#28a745',
                         }}
                       >
-                        {q.answer}
+                        {correctDisplay}
                       </td>
                       <td style={{ border: '1px solid #ddd', padding: '7px 10px', textAlign: 'center', fontSize: '16px' }}>
-                        {!userAns ? '○' : isCorrect ? '✓' : '✗'}
+                        {!hasAns ? '○' : correct ? '✓' : '✗'}
                       </td>
                     </tr>
                   );
@@ -417,14 +464,14 @@ export default function Exam() {
               Answer
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingLeft: '10px' }}>
-              {LETTERS.map(opt => (
+              {optionLetters(currentQ.options.length).map((opt: string) => (
                 <label
                   key={opt}
                   style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}
                 >
                   <input
                     type="checkbox"
-                    checked={answers[currentQ._id] === opt}
+                    checked={(answers[currentQ._id] ?? []).includes(opt)}
                     onChange={() => handleSelect(opt)}
                     style={{ cursor: 'pointer' }}
                   />
@@ -473,7 +520,11 @@ export default function Exam() {
               flexShrink: 0,
             }}
           >
-            <div style={{ marginBottom: '10px', color: '#555' }}>(Chọn 1 đáp án)</div>
+            <div style={{ marginBottom: '10px', color: '#555' }}>
+              {currentQ.answer.length > 1
+                ? `(Chọn ${currentQ.answer.length} đáp án)`
+                : '(Chọn 1 đáp án)'}
+            </div>
             <div style={{ fontSize: '13px', color: '#333', marginBottom: '4px' }}>
               Câu {currentIndex + 1} / {total}
             </div>
@@ -496,9 +547,9 @@ export default function Exam() {
             }}
           >
             <p style={{ marginBottom: '16px', fontWeight: 500 }}>{currentQ.question}</p>
-            {LETTERS.map((opt, idx) => (
-              <p key={opt} style={{ marginBottom: '8px' }}>
-                {currentQ.options[idx] ?? `${opt}.`}
+            {currentQ.options.map((text: string, idx: number) => (
+              <p key={idx} style={{ marginBottom: '8px' }}>
+                {text}
               </p>
             ))}
           </div>
