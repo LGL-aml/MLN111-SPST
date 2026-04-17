@@ -33,6 +33,7 @@ import {
 } from "../gameData";
 import ovtkMp3 from "../public/sound/ovtk.mp3";
 import liberationMp3 from "../public/sound/liberation.mp3";
+import winMp3 from "../public/sound/win.mp3";
 import { checkWinCondition, calculateScore } from "../../convex/gameData";
 
 function sortPlayersForLeaderboard(players: Doc<"players">[]) {
@@ -1694,6 +1695,8 @@ export default function Game() {
   // Background music (lobby + gameplay)
   const lobbyAudioRef = React.useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const winAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const hasPlayedWinRef = React.useRef(false);
   const [lobbyMusicEnabled, setLobbyMusicEnabled] = useState(true);
   const [musicVolume, setMusicVolume] = useState(0.35);
   const [showVolumePanel, setShowVolumePanel] = useState(false);
@@ -1771,6 +1774,12 @@ export default function Game() {
       gameAudio.currentTime = 0;
     }
 
+    const winAudio = winAudioRef.current;
+    if (winAudio) {
+      winAudio.pause();
+      winAudio.currentTime = 0;
+    }
+
     localStorage.removeItem("gameSession");
     setPlayerId(null);
     setRoomId(null);
@@ -1844,6 +1853,28 @@ export default function Game() {
     // finished / unknown
     stop(lobbyAudio);
     stop(gameAudio);
+  }, [room?.status, lobbyMusicEnabled, musicVolume]);
+
+  // Play win sound once when reaching the final results screen.
+  useEffect(() => {
+    if (room?.status !== "finished") {
+      hasPlayedWinRef.current = false;
+      return;
+    }
+
+    if (hasPlayedWinRef.current) return;
+    hasPlayedWinRef.current = true;
+
+    if (!lobbyMusicEnabled || musicVolume <= 0) return;
+
+    const audio = winAudioRef.current;
+    if (!audio) return;
+    audio.loop = false;
+    audio.volume = Math.min(1, Math.max(0, musicVolume));
+    audio.currentTime = 0;
+    void audio.play().catch(() => {
+      // Autoplay might be blocked; user interaction may be required.
+    });
   }, [room?.status, lobbyMusicEnabled, musicVolume]);
 
   async function handleCreateRoom(hostName: string, password?: string) {
@@ -2016,6 +2047,7 @@ export default function Game() {
     <div className="w-full flex-grow flex flex-col items-center justify-start pt-24 pb-12 relative font-sans overflow-hidden">
       <audio ref={lobbyAudioRef} src={ovtkMp3} preload="auto" className="hidden" />
       <audio ref={gameAudioRef} src={liberationMp3} preload="auto" className="hidden" />
+      <audio ref={winAudioRef} src={winMp3} preload="auto" className="hidden" />
       {/* Top controls */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
