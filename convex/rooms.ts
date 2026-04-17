@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { SCENARIO_EFFECTS } from "./gameData";
 
 export const create = mutation({
   args: { hostName: v.string(), password: v.string() },
@@ -133,9 +134,35 @@ export const leave = mutation({
 
     // Non-host leaves:
     // - In lobby: remove them from the waiting list.
-    // - In playing/finished: mark as eliminated so they don't block submissions.
+    // - In playing: mark as eliminated so they don't block submissions.
+    // - In finished: do NOT mark as eliminated (results are already final).
     if (!room || room.status === "lobby") {
       await ctx.db.delete(player._id);
+      return;
+    }
+
+    // If the room is already finished, leaving should not affect elimination status.
+    if (room.status === "finished") {
+      await ctx.db.patch(player._id, {
+        hasSubmitted: true,
+        currentChoice: null,
+      });
+      return;
+    }
+
+    // If we're at the results of the final round, treat it like a finished game.
+    // This avoids counting a player as eliminated when they leave after answering
+    // all scenarios but before the host auto-advances to the final board.
+    const totalRounds = SCENARIO_EFFECTS.length;
+    const isFinalResults =
+      room.status === "playing" &&
+      room.phase === "results" &&
+      room.currentRound >= totalRounds;
+    if (isFinalResults) {
+      await ctx.db.patch(player._id, {
+        hasSubmitted: true,
+        currentChoice: null,
+      });
       return;
     }
 
