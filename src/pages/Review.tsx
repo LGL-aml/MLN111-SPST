@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useAction } from 'convex/react';
+import { useQuery, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import ReactMarkdown from 'react-markdown';
 
@@ -29,7 +29,6 @@ function shuffle<T>(arr: T[]): T[] {
 export default function Review() {
   const navigate = useNavigate();
   const rawQuestions = useQuery(api.questions.list);
-  const seedMutation = useMutation(api.questions.seed);
   const explainAction = useAction(api.questions.explain);
 
   // Screen state
@@ -46,17 +45,6 @@ export default function Review() {
   const [answers, setAnswers] = useState<Record<string, string>>({});       // _id -> selected option letter
   const [explanations, setExplanations] = useState<Record<string, string>>({}); // _id -> explanation text
   const [loadingExplain, setLoadingExplain] = useState<string | null>(null); // _id loading
-
-  // Seed on mount if no data
-  const seeded = useRef(false);
-  useEffect(() => {
-    if (rawQuestions !== undefined && !seeded.current) {
-      seeded.current = true;
-      if (rawQuestions.length === 0) {
-        seedMutation({}).catch(console.error);
-      }
-    }
-  }, [rawQuestions, seedMutation]);
 
   // Auto-explain when answer is selected
   const handleAutoExplain = async (q: Question, selected: string) => {

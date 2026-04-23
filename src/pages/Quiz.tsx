@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
 /* ─── Types ─────────────────────────────────────────────────────── */
@@ -120,7 +120,6 @@ const todayQuote = quotes[new Date().getDay() % quotes.length];
 export default function Quiz() {
   const navigate = useNavigate();
   const rawQuestions = useQuery(api.questions.list);
-  const seedMutation = useMutation(api.questions.seed);
 
   /* modal state */
   const [modalOpen, setModalOpen] = useState(false);
@@ -129,13 +128,10 @@ export default function Quiz() {
   const [shuffleImport, setShuffleImport] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /* Ensure questions are seeded when modal opens (lazy) */
+  /* Open modal */
   const openModal = () => {
     setImportError('');
     setModalOpen(true);
-    if (rawQuestions !== undefined && rawQuestions.length === 0) {
-      seedMutation({}).catch(console.error);
-    }
   };
 
   /* Option 1: system bank (60 random) */

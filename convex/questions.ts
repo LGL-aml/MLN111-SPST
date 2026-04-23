@@ -1,33 +1,13 @@
 import { v } from "convex/values";
-import { mutation, query, action } from "./_generated/server";
-import { rawQuestions } from "./questionsData";
+import { query, action, mutation } from "./_generated/server";
 import { GoogleGenAI } from "@google/genai";
-
-/* ─── Seed ─────────────────────────────────────────────────────── */
-export const seed = mutation({
-  args: {},
-  handler: async (ctx) => {
-    // Check if data already exists
-    const existing = await ctx.db.query("quizQuestions").take(1);
-    if (existing.length > 0) return { seeded: false, message: "Data already exists" };
-
-    for (const q of rawQuestions) {
-      await ctx.db.insert("quizQuestions", {
-        questionId: q.id,
-        question: q.question,
-        options: q.options,
-        answer: q.answer,
-      });
-    }
-    return { seeded: true, count: rawQuestions.length };
-  },
-});
+import { rawQuestions } from "./questionsData";
 
 /* ─── List ──────────────────────────────────────────────────────── */
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("quizQuestions").take(131);
+    return await ctx.db.query("quizQuestions").collect();
   },
 });
 
@@ -92,5 +72,25 @@ ${!isCorrect ? `2. Giải thích tại sao đáp án ${args.selectedAnswer} là 
       }
       return "❌ Lỗi kết nối AI. Vui lòng thử lại sau.";
     }
+  },
+});
+
+/* ─── Reseed ─────────────────────────────────────────────────────── */
+export const reseed = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("quizQuestions").collect();
+    for (const doc of existing) {
+      await ctx.db.delete(doc._id);
+    }
+    for (const q of rawQuestions) {
+      await ctx.db.insert("quizQuestions", {
+        questionId: q.id,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+      });
+    }
+    return { reseeded: true, count: rawQuestions.length };
   },
 });

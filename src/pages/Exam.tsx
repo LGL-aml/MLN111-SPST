@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
 /** Derive ['A','B','C',...] from the question's options array length */
@@ -47,9 +47,7 @@ export default function Exam() {
 
   // Only hit Convex when no questions were passed via state
   const rawQuestions = useQuery(api.questions.list);
-  const seedMutation = useMutation(api.questions.seed);
 
-  const seeded = useRef(false);
   const picked = useRef(hasStateQs); // skip Convex pick when state already provides questions
 
   // Initialise questions immediately from router state when available;
@@ -64,17 +62,6 @@ export default function Exam() {
   const [wantToFinish, setWantToFinish] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Seed Convex bank if needed (only when not using state questions)
-  useEffect(() => {
-    if (hasStateQs) return;
-    if (rawQuestions === undefined) return;
-    if (seeded.current) return;
-    seeded.current = true;
-    if (rawQuestions.length === 0) {
-      seedMutation({}).catch(err => console.error('Failed to seed quizQuestions:', err));
-    }
-  }, [rawQuestions, seedMutation, hasStateQs]);
 
   // Pick questions from Convex bank (only when not using state questions)
   useEffect(() => {
