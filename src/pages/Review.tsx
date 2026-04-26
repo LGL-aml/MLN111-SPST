@@ -109,6 +109,17 @@ export default function Review() {
     setScreen('results');
   };
 
+  const retryWrong = () => {
+    const wrongQuestions = questions.filter(q => answers[q._id] && answers[q._id] !== q.answer);
+    if (wrongQuestions.length === 0) return;
+    setQuestions(wrongQuestions);
+    setCurrentIndex(0);
+    setAnswers({});
+    setExplanations({});
+    setLoadingExplain(null);
+    setScreen('reviewing');
+  };
+
   /* ─── Setup Screen ─── */
   if (screen === 'setup') {
     const total = rawQuestions?.length ?? 131;
@@ -368,6 +379,23 @@ export default function Review() {
           </table>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {wrong > 0 && (
+              <button
+                onClick={retryWrong}
+                style={{
+                  padding: '12px 24px',
+                  background: '#c62828',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Làm lại {wrong} câu sai
+              </button>
+            )}
             <button
               onClick={() => setScreen('setup')}
               style={{
